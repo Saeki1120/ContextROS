@@ -5,6 +5,13 @@ Layer indoor [
 		val = val1 + val2;
 		return val;
 	}
+
+	string connect(string name1, string name2)
+	{
+		string name;
+		name = name1 + name2;
+		return name;
+	}
 ]
 
 Layer outdoor [
@@ -14,4 +21,12 @@ Layer outdoor [
 		val = val1 - val2;
 		return val;
 	}
+	string connect(string name1, string name2)
+	{
+		string name;
+		name = name2 + name1;
+		return name;
+	}
 ]
+
+
