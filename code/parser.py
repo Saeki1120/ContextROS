@@ -118,23 +118,39 @@ def gen_func_def(ast):
 	mojiretu = ast[0] + '(' + ast[1] + ',' + "int layer_name" + ')'
 	return mojiretu
 
-def gen_if_sentence(ast):
+def gen_if(ast):
 	l = []
 	for i, kase in enumerate(ast):
 		#print kase
 		line1 = gen_func_def(kase)
-		line2 = "if (layer_name == 0) {return" + kase[2] + '(' + bind_comma(kase[3]) + ');}'
-		print line1
-		print line2
+		line2 = "if (layer_name == 0) {return " + kase[2] + '(' + bind_comma(kase[3]) + ");}"
+		#print line1
+		#print line2
 		l.append([kase[0], line1, line2])
-	print l
+	#print l
 	return l
 
 
-def gen_elif_sentence(ast, katamari):
+def gen_elif(ast, katamari, num):
 	for i, kase in enumerate(ast):
 		#print kase
+		if kase[0] == katamari[i][0]:
+			sen = "else if (layer_name == " + str(num) + "){return " \
+				+ kase[2] + '(' + bind_comma(kase[3]) + ");}"
+			#print sen
+			katamari[i].append(sen)
+		else:
+			print("error")
 		pass
+
+def gen_if_sentence(ast):
+	for kase in ast:
+		print kase[1]
+		print '{'
+		for kase2 in kase[2:]:
+			print kase2
+		print '}'
+
 
 def gen(ast):
 	l = []
@@ -150,9 +166,12 @@ def gen(ast):
 
 	for i, kase in enumerate(l):
 		if i == 0:
-			katamari = gen_if_sentence(kase)
+			katamari = gen_if(kase)
 		else:
-			gen_elif_sentence(kase, katamari)
+			gen_elif(kase, katamari, i)
+	#print katamari
+	gen_if_sentence(katamari)
+
 
 
 if __name__ == '__main__':
