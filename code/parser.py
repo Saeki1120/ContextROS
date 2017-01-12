@@ -109,7 +109,7 @@ def gen_func(ast, layer_name):
 		print line1
 		print line2
 		print line3
-		l.append([before_func_name, bind_space(kase[1]), kase[0][-1], func_name_list])
+		l.append([before_func_name, bind_space(kase[1]), kase[0][-1], func_name_list, line1 + line2])
 
 	return l
 
@@ -169,8 +169,16 @@ def gen(ast):
 			katamari = gen_if(kase)
 		else:
 			gen_elif(kase, katamari, i)
-	#print katamari
+	
 	gen_if_sentence(katamari)
+
+	print ("-----------------------------")
+	for lay in l:
+		for func_l in lay:
+			print func_l[-1] + ';'
+	for if_sen in katamari:
+		print if_sen[1] + ';'
+	print ("-----------------------------")
 
 
 
