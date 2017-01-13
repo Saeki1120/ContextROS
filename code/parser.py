@@ -51,7 +51,7 @@ Layer = Group(kLayer + pattern + lbrack + Group(ZeroOrMore(function)) + rbrack)
 ##Layer = kLayer + pattern + lbrack + Group(ZeroOrMore(function)) + SkipTo(']') + rbrack
 
 # match ( variable ) { Layer... }
-amatch = ZeroOrMore(Layer)
+amatch = SkipTo(kLayer) + ZeroOrMore(Layer)
 
 ##amatch = Layer
 
@@ -95,7 +95,7 @@ def bind_comma(ast):
 	return moji
 
 
-def gen_func(ast, layer_name):
+def gen_func(ast, layer_name, f):
 	l = []
 	for i, kase in enumerate(ast):
 		before_func_name = bind_space(kase[0])
@@ -105,10 +105,18 @@ def gen_func(ast, layer_name):
 		#print function_name
 		line1 = bind_space(kase[0])
 		line2 = '(' +  bind_space(kase[1]) + ')'
-		line3 = '{' +  kase[2] + '}'
+		line3 = '{\n ' +  kase[2] + '}\n'
+
 		print line1
 		print line2
 		print line3
+
+		##
+		f.write(line1)
+		f.write(line2)
+		f.write(line3)
+		##
+
 		l.append([before_func_name, bind_space(kase[1]), kase[0][-1], func_name_list, line1 + line2])
 
 	return l
@@ -123,7 +131,7 @@ def gen_if(ast):
 	for i, kase in enumerate(ast):
 		#print kase
 		line1 = gen_func_def(kase)
-		line2 = "if (layer_name == 0) {return " + kase[2] + '(' + bind_comma(kase[3]) + ");}"
+		line2 = "if (layer_name == 0) {return " + kase[2] + '(' + bind_comma(kase[3]) + ");}\n"
 		#print line1
 		#print line2
 		l.append([kase[0], line1, line2])
@@ -136,30 +144,42 @@ def gen_elif(ast, katamari, num):
 		#print kase
 		if kase[0] == katamari[i][0]:
 			sen = "else if (layer_name == " + str(num) + "){return " \
-				+ kase[2] + '(' + bind_comma(kase[3]) + ");}"
+				+ kase[2] + '(' + bind_comma(kase[3]) + ");}\n"
 			#print sen
 			katamari[i].append(sen)
 		else:
 			print("error")
 		pass
 
-def gen_if_sentence(ast):
+def gen_if_sentence(ast, f):
 	for kase in ast:
 		print kase[1]
 		print '{'
+
+		##
+		f.write(kase[1])
+		f.write('{\n')
+		##
 		for kase2 in kase[2:]:
 			print kase2
+			f.write(kase2)
 		print '}'
+		f.write('}\n')
 
 
 def gen(ast):
 	l = []
-	for i, kase in enumerate(ast):
+	f = open("layer.cpp", "w")
+	fh = open("layer.h", "w")
+
+	f.write(' #include "layer.h"\n ')
+
+	for i, kase in enumerate(ast[1:]):
 		if kase[0] == 'Layer':
 			variable = kase[1]
 			#print variable
 			#print kase_copy
-			l.append(gen_func(kase[2], variable))
+			l.append(gen_func(kase[2], variable, f))
 		else:
 			print("error")
 	#print l
@@ -170,15 +190,24 @@ def gen(ast):
 		else:
 			gen_elif(kase, katamari, i)
 	
-	gen_if_sentence(katamari)
+	gen_if_sentence(katamari, f)
 
 	print ("-----------------------------")
+
+	## include
+	fh.write("#ifndef _chapter03_layer_H_\n#define _chapter03_layer_H_\n")
+	fh.write(ast[0])
+
 	for lay in l:
 		for func_l in lay:
 			print func_l[-1] + ';'
+			fh.write(func_l[-1] + ';\n')
 	for if_sen in katamari:
 		print if_sen[1] + ';'
+		fh.write(if_sen[1] + ';\n')
 	print ("-----------------------------")
+
+	fh.write("#endif")	
 
 
 
@@ -192,6 +221,8 @@ if __name__ == '__main__':
 		print ("-----------------------------")
 
 		gen(result)
+
+
 
 
 
