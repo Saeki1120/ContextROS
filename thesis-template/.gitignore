@@ -1,0 +1,10 @@
+*.log
+*.blg
+*.log
+*.toc
+*.dvi
+*.bbl
+*.orig
+*.aux
+*.bb
+*.xbb

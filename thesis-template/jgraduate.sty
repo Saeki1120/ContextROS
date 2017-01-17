@@ -1,0 +1,304 @@
+%% 卒論用スタイルファイル jgraduate.sty for pLaTeX2e
+%%
+%% 使い方
+%%
+%% \documentclass[12pt]{jreport} % 12ptでjreportを使って下さい。
+%% \usepackage{jgraduate98}      % jgraduate98.styを読み込む
+%% \usepackage{makeidx}          % 索引作成用
+%%
+%% % 前設定
+%% \title{}                      % 論文題目 (ほげほげの研究, etc.)
+%% \author{}                     % 著者氏名 (名無 権兵衛, etc.)
+%% \university{}                 % 大学名 (九州大学, etc.)
+%% \department{}                 % 学部名 (工学部, etc.)
+%% \major{}                      % 学科名 (情報工学科, etc.)
+%%
+%% \begin{document}              % ここから本文は始まる
+%%
+%% \maketitle                    % 表紙
+%%
+%% \begin{abstract}              %
+%%  概要                         % 概要
+%% \end{abstract}                %
+%%
+%% \tableofcontents              % 目次 (↓ *のついている項目)
+%% \listoffigures                % 図目次
+%% \listoftables                 % 表目次
+%% \newpage                      % 改ページ
+%% \pagenumbering{arabic}        % ページ番号をアラビア数字に
+%%
+%% \chapter{}                    % 章 (*)
+%% \section{}                    % 節 (*)
+%% \subsection{}                 % 項 (*)
+%% \subsubsection{}              % 目
+%% \paragraph{}                  % 段落 
+%% \subparagraph{}               % 小段落
+%%
+%% \acknowledgment               % 謝辞 (*)
+%%
+%% % ここに文献リストを入れる。文献リストの書き方は人それぞれ。
+%% % (ベタ書き, 半分計算機にやらせる, 全部計算機任せ, etc.)
+%%
+%% \appendix                     % ここから付録(もしあれば)
+%% \chapter{}                    % 付録の章 (*)
+%%
+%% \printindex                   % 索引
+%%
+%% \end{document}                % 本文終わり
+
+%% % 一段組のパラメータ - 縦方向
+%% \setlength{\topmargin}{-2.4mm} % 23mm - 1in
+%% \setlength{\headheight}{5mm}
+%% \setlength{\headsep}{5mm}
+%% \setlength{\topskip}{8mm}
+%% \setlength{\footskip}{10mm}
+%% %\setlength{\footheight}{10mm} % for LaTeX 2.09
+%% \setlength{\marginparpush}{5mm}
+%% \setlength{\textheight}{234mm}
+%% % textheight = pageheight(297) - o_topmargin(23) - headheight*(5) -
+%% %              headsep*(5) - footskip*(10) - bottommargin(20)
+
+%% % 一段組のパラメータ - 横方向
+%% \setlength{\oddsidemargin}{-3.4mm}  % 22mm - 1in
+%% \setlength{\evensidemargin}{-3.4mm} % 22mm - 1in
+%% \setlength{\marginparsep}{0mm}
+%% \setlength{\marginparwidth}{0mm}
+%% \setlength{\textwidth}{166mm}
+%% % textwidth = pagewidth(210) - leftmargin(22) - maginparsep(0) - 
+%% %             marginparwidth(0) - rightmargin(22)
+
+% リスト環境のパラメータ - 縦方向
+\setlength{\partopsep}{0mm}
+\setlength{\topsep}{0mm}
+\setlength{\parskip}{0mm}
+\setlength{\parsep}{0mm}
+\setlength{\itemsep}{0mm}
+
+% リスト環境のパラメータ - 横方向
+\setlength{\leftmargin}{50mm}
+\setlength{\labelwidth}{10zw}
+\setlength{\labelsep}{1zw}
+\setlength{\itemindent}{2zw}
+\setlength{\listparindent}{1zw} % どうやら、使われていないらしい
+\setlength{\rightmargin}{0mm}
+
+% ページレイアウト
+\def\ps@jgraduate{%
+  \let\@mkboth\markboth%
+  \def\@oddhead{\underline{\hbox to \textwidth{~~\bf\rightmark\hfil%
+        \thepage~~}}}%
+  \let\@evenhead\@oddhead%
+  \def\@oddfoot{$\overline{\hbox to \textwidth{\hfil%
+        \@university\ \@department\ \@major~~}}$}%
+  \let\@evenfoot\@oddfoot%
+  \def\chaptermark##1{\markright{%
+    \@chapapp\space\thechapter\space\@chappos~~~##1}}%
+}
+
+% 表紙
+\def\maketitle{
+ \begin{titlepage}%
+  \null%
+  \vfil%
+  \centering%
+   {\huge\textbf\@title\par}\vskip 20em%
+   {\Large\textbf\@author\par}\vskip 2.5em minus 1em %
+   {\large\textbf\@date}\vskip 2.5em minus 1em%
+   {\large\textbf\@major\par}%
+  \vfil%
+ \end{titlepage}%
+}
+
+% 概要
+\renewenvironment{abstract}{%
+ \pagenumbering{roman}
+  \if@twocolumn
+    \section*{\abstractname}%
+    \begin{quotation}%
+  \else
+    \@mkboth{\abstractname}{\abstractname}%
+    \vspace*{50\p@}%
+    {%
+     \parindent \z@ \raggedright
+     \reset@font\huge\bfseries
+     \interlinepenalty\@M
+     \center{\abstractname}\par\nobreak
+     \vskip 40\p@
+    }%
+    \begin{quotation}%
+  \fi}{\end{quotation}}
+
+
+% 目次
+\def\tableofcontents{%
+% \pagenumbering{roman}
+ \if@twocolumn\@restonecoltrue\onecolumn
+ \else\@restonecolfalse\fi
+ \chapter*{\contentsname}%
+ \@mkboth{\contentsname}{\contentsname}%
+ \@starttoc{toc}%
+ \if@restonecol\twocolumn\fi
+ \newpage
+% \pagenumbering{arabic}
+}
+
+% 章関係
+\def\chapter{%
+ \if@openright\cleardoublepage\else\clearpage\fi
+ \global\@topnum\z@
+ \@afterindenttrue
+ \secdef\@chapter\@schapter}
+
+\def\@makechapterhead#1{%
+  \vspace*{50\p@}%
+  {%
+   \parindent \z@ \raggedright
+   \reset@font\huge\bfseries
+   \ifnum \c@secnumdepth >\m@ne
+    \@chapapp\thechapter\@chappos
+    \par\nobreak
+    \vskip 20\p@
+   \fi
+   \interlinepenalty\@M
+   #1\par\nobreak
+   \vskip 40\p@
+  }%
+}
+
+\def\@makeschapterhead#1{%
+ \vspace*{50\p@}%
+ {%
+  \parindent \z@ \raggedright
+  \reset@font\huge\bfseries
+  \interlinepenalty\@M
+  #1\par\nobreak
+  \vskip 40\p@
+ }%
+}
+
+% enumerateのラベル
+\def\labelenumi{(\arabic{enumi})}
+
+% 索引
+\renewenvironment{theindex}
+  {\newpage\if@twocolumn\@restonecolfalse\else\@restonecoltrue\fi%
+   \columnseprule\z@ \columnsep 35\p@%
+   \twocolumn[\chapter*{\indexname}]%
+   \addcontentsline{toc}{chapter}{\indexname}
+   \@mkboth{\indexname}{\indexname}%
+   \parindent\z@%
+   \parskip\z@ \@plus .3\p@\relax%
+   \let\item\@idxitem%
+  }
+  {\if@restonecol\onecolumn\else\clearpage\fi}
+
+
+% 謝辞
+\def\acknowledgementname{\def\@cknowledgementname}
+\let\acknowledgmentname\acknowledgementname
+\acknowledgementname{謝辞}
+
+\def\acknowledgement{%
+ \typeout{\@cknowledgementname}%
+ \chapter*{\@cknowledgementname}%
+ \@mkboth{\@cknowledgementname}{\@cknowledgementname}%
+ \addcontentsline{toc}{chapter}{\@cknowledgementname}%
+}
+\let\acknowledgment\acknowledgement
+
+
+% 参考文献
+% 参考文献／文献参照
+\def\name@bib{参考文献}
+\def\label@bib#1{%
+  [#1]%
+%  \rlap{%(
+%    )}%
+  }
+\renewenvironment{thebibliography}[1]%
+  {\chapter*{\name@bib}%
+    \@mkboth{\name@bib}{\name@bib}%
+    \addcontentsline{toc}{chapter}{\name@bib}%
+    \list{%
+      \label@bib{\arabic{enumi}}%
+    }{%
+      \settowidth\labelwidth{\@biblabel{#1}}%
+      \leftmargin\labelwidth
+      \advance\leftmargin\labelsep
+      \def\newblock{\hskip .11em plus .33em minus .07em}
+      \usecounter{enumi}%
+      \let\p@enumi\@empty
+      \renewcommand\theenumi{\@arabic\c@enumi}}%
+    \sloppy
+    \clubpenalty4000
+    \@clubpenalty\clubpenalty
+    \widowpenalty4000%
+    \sfcode`\.\@m}%
+  {\def\@noitemerr
+     {\@latex@warning{Empty `thebibliography' environment}}%
+     \endlist}
+
+\newif\ifCite
+\def\cite{\Citefalse\@ifnextchar[%]
+  {\@tempswatrue\@citex}{\@tempswafalse\@citex[]}}
+\def\Cite{\Citetrue\@ifnextchar[%]
+  {\@tempswatrue\@citex}{\@tempswafalse\@citex[]}}
+\def\@cite#1#2{\ifCite\else$^{\hbox{\scriptsize\fi{[#1%
+  \if@tempswa , #2\fi]}\ifCite\else}}$\fi}
+
+%発表論文(publication)
+\newcounter{pnumiv}
+\renewcommand{\thepnumiv}{\@Alph\c@pnumiv}
+\renewcommand{\labelenumiv}{\thepnumiv.}
+\newcommand{\publicationname}{発表論文}
+\def\@publabel#1{[#1]}
+\newenvironment{publication}[1]{%
+  \global\let\presectionname\relax
+  \global\let\postsectionname\relax
+   \list{\@publabel{\@arabic\c@pnumiv}}%
+        {\settowidth\labelwidth{\@publabel{#1}}%
+         \leftmargin\labelwidth
+         \advance\leftmargin\labelsep
+         \@openbib@code
+         %%%
+         %\usecounter{pnumiv}%
+         % ↑環境毎にカウンタをクリア ↓クリアしない
+         \@nmbrlisttrue\def\@listctr{pnumiv}%
+         %%%
+         \let\p@pnumiv\@empty
+         \renewcommand\thepnumiv{\@arabic\c@pnumiv}}%
+   \sloppy
+   \clubpenalty4000
+   \@clubpenalty\clubpenalty
+   \widowpenalty4000%
+   \sfcode`\.\@m}
+  {\def\@noitemerr
+    {\@latex@warning{Empty `publication' environment}}%
+   \endlist}
+\def\publications{%
+  \chapter*{\publicationname}%
+  \addcontentsline{toc}{chapter}{\publicationname}%
+  \@mkboth{\publicationname}{\publicationname}%
+}
+
+% その他
+\def\yen{Y\llap=} % 円マーク
+%\def\yen{\textbackslash} % バックスラッシュ
+\def\university{\def\@university}
+\def\department{\def\@department}
+\def\major{\def\@major}
+
+% 初期設定
+\university{\tt\yen university\{大学名\}}
+\department{\tt\yen department\{学部/研究科名\}}
+\major{\tt\yen major\{学科/課程 専攻名\}}
+\pagestyle{jgraduate}
+\def\baselinestretch{1.5}
+
+%----------------------------------------------------------------------
+% 表で使う太めの罫線: \Hline
+% IEICE Trans.からのパクリ
+% 未定義の時だけ定義
+\makeatletter
+ \@ifundefined{Hline}{\newcommand{\Hline}{\noalign{\hrule height 0.4mm}}}
+\makeatother
