@@ -76,18 +76,6 @@ def get_func_name(func_ast):
 def set_name(ast, layer_name):
 	ast[-1] = ast[-1] + "_" + layer_name
 
-def get_layer_num(ast):
-	layer_number = []
-	for i, kase in enumerate(ast[1:]):
-		if kase[0] == 'Layer':
-			variable = kase[1]
-			#print variable
-			#print kase_copy
-			layer_number.append([variable, i])
-		else:
-			print("error")
-	return layer_number
-
 def bind_space(ast):
 	moji = ""
 	for i, kast in enumerate(ast):
@@ -119,9 +107,9 @@ def gen_func(ast, layer_name, f):
 		line2 = '(' +  bind_space(kase[1]) + ')'
 		line3 = '{\n ' +  kase[2] + '}\n'
 
-		#print line1
-		#print line2
-		#print line3
+		print line1
+		print line2
+		print line3
 
 		##
 		f.write(line1)
@@ -163,34 +151,20 @@ def gen_elif(ast, katamari, num):
 			print("error")
 		pass
 
-def gen_if_l_num(l_number):
-	ast = []
-	ast.append('int get_layer_num')
-	ast.append('int get_layer_num(std::string layer_name)')
-	for i, kase in enumerate(l_number):
-		if i == 0:
-			ast.append('if (layer_name == "' + kase[0] + '") {return ' + str(kase[1]) + ';}\n')
-		else:
-			ast.append('else if (layer_name == "' + kase[0] + '") {return ' + str(kase[1]) + ';}\n')
-	ast.append("return -1;\n")
-	return ast
-
 def gen_if_sentence(ast, f):
 	for kase in ast:
-		#print kase[1]
-		#print '{'
+		print kase[1]
+		print '{'
 
 		##
 		f.write(kase[1])
 		f.write('{\n')
 		##
 		for kase2 in kase[2:]:
-		#	print kase2
+			print kase2
 			f.write(kase2)
-		#print '}'
+		print '}'
 		f.write('}\n')
-
-
 
 
 def gen(ast):
@@ -215,15 +189,8 @@ def gen(ast):
 			katamari = gen_if(kase)
 		else:
 			gen_elif(kase, katamari, i)
-
-	print katamari
+	
 	gen_if_sentence(katamari, f)
-
-	l_number = get_layer_num(ast)
-	print l_number
-	katamari2 = gen_if_l_num(l_number)
-	print katamari2
-	gen_if_sentence([katamari2], f)
 
 	print ("-----------------------------")
 
@@ -233,10 +200,10 @@ def gen(ast):
 
 	for lay in l:
 		for func_l in lay:
-			#print func_l[-1] + ';'
+			print func_l[-1] + ';'
 			fh.write(func_l[-1] + ';\n')
 	for if_sen in katamari:
-		#print if_sen[1] + ';'
+		print if_sen[1] + ';'
 		fh.write(if_sen[1] + ';\n')
 	print ("-----------------------------")
 

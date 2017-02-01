@@ -59,3 +59,9 @@ if (layer_name == 0) {return hoge_indoor(name1,name2);}
 else if (layer_name == 1){return hoge_outdoor(name1,name2);}
 else if (layer_name == 2){return hoge_middoor(name1,name2);}
 }
+int get_layer_num(std::string layer_name){
+if (layer_name == "indoor") {return 0;}
+else if (layer_name == "outdoor") {return 1;}
+else if (layer_name == "middoor") {return 2;}
+return -1;
+}
