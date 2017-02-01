@@ -208,7 +208,7 @@ def gen(ast):
 			l.append(gen_func(kase[2], variable, f))
 		else:
 			print("error")
-	#print l
+	print l
 
 	for i, kase in enumerate(l):
 		if i == 0:
@@ -216,19 +216,19 @@ def gen(ast):
 		else:
 			gen_elif(kase, katamari, i)
 
-	print katamari
+	#print katamari
 	gen_if_sentence(katamari, f)
 
 	l_number = get_layer_num(ast)
-	print l_number
+	#print l_number
 	katamari2 = gen_if_l_num(l_number)
-	print katamari2
+	#print katamari2
 	gen_if_sentence([katamari2], f)
 
 	print ("-----------------------------")
 
 	## include
-	fh.write("#ifndef _chapter03_layer_H_\n#define _chapter03_layer_H_\n")
+	fh.write("#ifndef _chapter03_layer_H_\n#define _chapter03_layer_H_\n#include <string>\n")
 	fh.write(ast[0])
 
 	for lay in l:
@@ -238,6 +238,7 @@ def gen(ast):
 	for if_sen in katamari:
 		#print if_sen[1] + ';'
 		fh.write(if_sen[1] + ';\n')
+	fh.write('int get_layer_num(std::string layer_name);\n')
 	print ("-----------------------------")
 
 	fh.write("#endif")	

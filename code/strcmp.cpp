@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+
+#include <string>
 /*
 int get_layer_num(char *l_name){
 	if (strcmp("indoor", l_name) == 0){
