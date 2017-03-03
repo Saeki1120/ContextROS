@@ -1,2 +1,0 @@
-simple
--DCATKIN_DEVEL_PREFIX=/Users/nel/src/ContextROS/catkinws/devel -DCMAKE_INSTALL_PREFIX=/Users/nel/src/ContextROS/catkinws/install -G Unix Makefiles
