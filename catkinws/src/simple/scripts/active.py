@@ -8,10 +8,6 @@ class Simple1(CROS):
     def test(self):
         print('base')
 
-# XXX find better description
-Simple1.add_layer('layer1')
-Simple1.add_layer('layer2')
-
 @layer(Simple1, 'layer1', 'test')
 def test_l1(self):
     print('l1')

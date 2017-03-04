@@ -3,13 +3,20 @@ from std_msgs.msg import String
 
 class CPy:
     @classmethod
-    def add_layer(cls, layer):
+    def init_layer(cls):
         if not hasattr(cls, 'layers'):
             cls.layers = {}
+    
+    @classmethod
+    def add_layer(cls, layer):
+        cls.init_layer()
         cls.layers[layer] = {}
 
     @classmethod
     def add_method(cls, layer, name, method):
+        cls.init_layer()
+        if layer not in cls.layers:
+            cls.add_layer(layer)
         cls.layers[layer][name] = method
         
     def __init__(self):
