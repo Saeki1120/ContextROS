@@ -26,15 +26,17 @@ Simple1.add_method('layer2', 'test', test_l2)
 # Main
 rospy.init_node('talker', anonymous=True)
 
+r = rospy.Rate(0.5)
+
 a = Simple1()
-a.activate(False)
-r = rospy.Rate(1)
+r.sleep()
+a.activate('base')
 a.test()
+r.sleep()
 a.activate('layer1')
-r.sleep()
-r.sleep()
 a.test()
+r.sleep()
 a.activate('layer2')
-r.sleep()
 a.test()
+
 

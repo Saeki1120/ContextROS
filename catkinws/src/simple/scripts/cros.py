@@ -13,14 +13,14 @@ class CPy:
         cls.layers[layer][name] = method
         
     def __init__(self):
-        self._layer = False
+        self._layer = 'base'
 
     def _activate(self, layer):
         self._layer = layer
 
 def base(func):
     def inner(self, *args, **kwargs):
-        if self._layer == False:
+        if self._layer == 'base':
             return func(self, *args, **kwargs)
         else:
             return self.__class__.layers[self._layer][func.__name__](self, *args, **kwargs)
@@ -36,9 +36,10 @@ class CROS(CPy):
         self.sbscriber = rospy.Subscriber(self.topic, String, self.receive_activation)
 
     def activate(self, layer):
-        self._activate(layer)
+        #self._activate(layer)
         self.publisher.publish(layer)
 
     def receive_activation(self, data):
+        print('receive: ' + data.data)
         self._activate(data.data)
         
