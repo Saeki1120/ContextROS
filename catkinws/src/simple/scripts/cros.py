@@ -41,3 +41,7 @@ class CROS(CPy):
     def receive_activation(self, data):
         self._activate(data.data)
         
+def layer(cls, layer, name):
+    def f(func):
+        cls.add_method(layer, name, func)
+    return f

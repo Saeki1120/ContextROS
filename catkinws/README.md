@@ -8,7 +8,6 @@
 > rosrun simple active.py
 
 ## TODO
-- add syntax sugar for add_method
 - add reliable layer change feature (using service call?)
 - share current layer state in a same program
 
