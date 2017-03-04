@@ -20,17 +20,21 @@ class CPy:
         cls.layers[layer][name] = method
         
     def __init__(self):
-        self._layer = 'base'
+        self._layer = ['base']
 
     def _activate(self, layer):
-        self._layer = layer
+        self._layer.append(layer)
+
+    def _deactivate(self, layer):
+        self._layer.remove(layer)
 
 def base(func):
     def inner(self, *args, **kwargs):
-        if self._layer == 'base':
+        current_layer = self._layer[-1]
+        if current_layer == 'base':
             return func(self, *args, **kwargs)
         else:
-            return self.__class__.layers[self._layer][func.__name__](self, *args, **kwargs)
+            return self.__class__.layers[current_layer][func.__name__](self, *args, **kwargs)
     return inner
 
 class CROS(CPy):
@@ -38,15 +42,27 @@ class CROS(CPy):
 
     def __init__(self):
         CPy.__init__(self)
-        self.topic = 'cros/activate'
-        self.publisher = rospy.Publisher(self.topic, String, queue_size=10)
-        self.sbscriber = rospy.Subscriber(self.topic, String, self.receive_activation)
+        # for activate
+        topic = 'cros/activate'
+        self.actpub = rospy.Publisher(topic, String, queue_size=10)
+        self.actsub = rospy.Subscriber(topic, String, self.receive_activation)
+        # for deactivate
+        topic = 'cros/deactivate'
+        self.deactpub = rospy.Publisher(topic, String, queue_size=10)
+        self.deactsub = rospy.Subscriber(topic, String, self.receive_deactivation)
+        
 
     def activate(self, layer):
-        self.publisher.publish(layer)
+        self.actpub.publish(layer)
+
+    def deactivate(self, layer):
+        self.deactpub.publish(layer)
 
     def receive_activation(self, data):
         self._activate(data.data)
+
+    def receive_deactivation(self, data):
+        self._deactivate(data.data)
         
 def layer(cls, layer, name):
     def f(func):
