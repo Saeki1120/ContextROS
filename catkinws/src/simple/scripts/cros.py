@@ -22,13 +22,13 @@ class CPy:
     def __init__(self):
         # array of activated layers
         self._layer = ['base']
-        # array of valid functions for proceeds
+        # array of valid functions for proceeds, init at method call
         self._proceed_funcs = []
 
-    def _activate(self, layer):
+    def activate(self, layer):
         self._layer.append(layer)
 
-    def _deactivate(self, layer):
+    def deactivate(self, layer):
         self._layer.remove(layer)
 
     def proceed(self, *args, **kwargs):
@@ -66,10 +66,10 @@ class CROS(CPy):
         self.deactpub.publish(layer)
 
     def receive_activation(self, data):
-        self._activate(data.data)
+        CPy.activate(self, data.data)
 
     def receive_deactivation(self, data):
-        self._deactivate(data.data)
+        CPy.deactivate(self, data.data)
         
 def layer(cls, layer, name):
     def f(func):
