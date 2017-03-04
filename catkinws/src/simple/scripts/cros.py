@@ -20,7 +20,10 @@ class CPy:
         cls.layers[layer][name] = method
         
     def __init__(self):
+        # array of activated layers
         self._layer = ['base']
+        # array of valid functions for proceeds
+        self._proceed_funcs = []
 
     def _activate(self, layer):
         self._layer.append(layer)
@@ -28,13 +31,18 @@ class CPy:
     def _deactivate(self, layer):
         self._layer.remove(layer)
 
+    def proceed(self, *args, **kwargs):
+        current = self._proceed_funcs.pop()
+        retval = current(self, *args, **kwargs)
+        self._proceed_funcs.append(current)
+        return retval
+
 def base(func):
     def inner(self, *args, **kwargs):
-        current_layer = self._layer[-1]
-        if current_layer == 'base':
-            return func(self, *args, **kwargs)
-        else:
-            return self.__class__.layers[current_layer][func.__name__](self, *args, **kwargs)
+        self._proceed_funcs = [func] # for base
+        self._proceed_funcs.extend([self.__class__.layers[l][func.__name__]
+                                        for l in self._layer if l in self.__class__.layers])
+        return self.proceed(*args, **kwargs)
     return inner
 
 class CROS(CPy):
@@ -50,7 +58,6 @@ class CROS(CPy):
         topic = 'cros/deactivate'
         self.deactpub = rospy.Publisher(topic, String, queue_size=10)
         self.deactsub = rospy.Subscriber(topic, String, self.receive_deactivation)
-        
 
     def activate(self, layer):
         self.actpub.publish(layer)
