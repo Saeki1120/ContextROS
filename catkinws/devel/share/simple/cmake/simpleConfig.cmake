@@ -91,9 +91,9 @@ endif()
 # flag project as catkin-based to distinguish if a find_package()-ed project is a catkin project
 set(simple_FOUND_CATKIN_PROJECT TRUE)
 
-if(NOT "/Users/nel/src/ContextROS/catkinws/devel/include " STREQUAL " ")
+if(NOT " " STREQUAL " ")
   set(simple_INCLUDE_DIRS "")
-  set(_include_dirs "/Users/nel/src/ContextROS/catkinws/devel/include")
+  set(_include_dirs "")
   foreach(idir ${_include_dirs})
     if(IS_ABSOLUTE ${idir} AND IS_DIRECTORY ${idir})
       set(include ${idir})
