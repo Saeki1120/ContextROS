@@ -36,10 +36,8 @@ class CROS(CPy):
         self.sbscriber = rospy.Subscriber(self.topic, String, self.receive_activation)
 
     def activate(self, layer):
-        #self._activate(layer)
         self.publisher.publish(layer)
 
     def receive_activation(self, data):
-        print('receive: ' + data.data)
         self._activate(data.data)
         
