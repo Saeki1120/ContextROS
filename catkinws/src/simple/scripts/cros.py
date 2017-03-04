@@ -37,13 +37,18 @@ class CPy:
         self._proceed_funcs.append(current)
         return retval
 
-def base(func):
+def cpybase(func):
     def inner(self, *args, **kwargs):
         self._proceed_funcs = [func] # for base
         self._proceed_funcs.extend([self.__class__.layers[l][func.__name__]
                                         for l in self._layer if l in self.__class__.layers])
         return self.proceed(*args, **kwargs)
     return inner
+
+def cpylayer(cls, layer, name):
+    def f(func):
+        cls.add_method(layer, name, func)
+    return f
 
 class CROS(CPy):
     """ContextROS"""
@@ -71,7 +76,3 @@ class CROS(CPy):
     def receive_deactivation(self, data):
         CPy.deactivate(self, data.data)
         
-def layer(cls, layer, name):
-    def f(func):
-        cls.add_method(layer, name, func)
-    return f
