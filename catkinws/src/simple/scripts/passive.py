@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
-from cros import *
+from crospy import *
 import rospy
 
 class Simple2(CROS):
-    @base
+    @cpybase
     def test(self):
         print('base')
 
-@layer(Simple2, 'layer1', 'test')
+@cpylayer(Simple2, 'layer1', 'test')
 def test_l1(self):
     print('l1')
     self.proceed()
 
-@layer(Simple2, 'layer2', 'test')
+@cpylayer(Simple2, 'layer2', 'test')
 def test_l2(self):
     print('l2')
     
