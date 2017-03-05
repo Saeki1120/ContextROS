@@ -1,7 +1,7 @@
 import rospy
 from std_msgs.msg import String
 
-class CPy:
+class CPy(object):
     @classmethod
     def init_layer(cls):
         if not hasattr(cls, 'layers'):
