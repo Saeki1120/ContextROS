@@ -56,14 +56,15 @@ def cpylayer(cls, layer, name):
 class CROS(CPy):
     """ContextROS"""
 
-    def __init__(self):
+    def __init__(self, group=''):
         CPy.__init__(self)
         # for activate
-        topic = 'cros/activate'
+        topic = 'cros/' + group + '/activate'
+        print(topic)
         self.actpub = rospy.Publisher(topic, String, queue_size=10)
         self.actsub = rospy.Subscriber(topic, String, self.receive_activation)
         # for deactivate
-        topic = 'cros/deactivate'
+        topic = 'cros/' + group + '/deactivate'
         self.deactpub = rospy.Publisher(topic, String, queue_size=10)
         self.deactsub = rospy.Subscriber(topic, String, self.receive_deactivation)
 
