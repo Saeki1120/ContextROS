@@ -1,7 +1,7 @@
 import rospy
 from std_msgs.msg import String
 
-class CPy:
+class CPy():
     @classmethod
     def init_layer(cls):
         if not hasattr(cls, 'layers'):
@@ -40,8 +40,12 @@ class CPy:
 def cpybase(func):
     def inner(self, *args, **kwargs):
         self._proceed_funcs = [func] # for base
-        self._proceed_funcs.extend([self.__class__.layers[l][func.__name__]
-                                        for l in self._layer if l in self.__class__.layers])
+        try:
+            self._proceed_funcs.extend([self.__class__.layers[l][func.__name__]
+                                            for l in self._layer if l in self.__class__.layers])
+        except:
+            pass
+        print(self._proceed_funcs)
         return self.proceed(*args, **kwargs)
     return inner
 
