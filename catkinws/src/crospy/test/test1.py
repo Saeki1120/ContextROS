@@ -179,6 +179,23 @@ class CROSTest(unittest.TestCase):
         c2.test()
         self.assertEqual(True, c1.l1_called)
         self.assertEqual(True, c2.l1_called)
+
+    def test_l1l2_active(self):
+        c1 = CROS1()
+        c2 = CROS2()
+        self.sleep() # need to subscribe...
+        c1.activate('l1')
+        c1.activate('l2')
+        self.sleep()
+        self.sleep()
+        self.assertEqual(['base', 'l1', 'l2'], c1._layer)
+        self.assertEqual(['base', 'l1', 'l2'], c2._layer)
+        c1.test()
+        c2.test()
+        self.assertEqual(False, c1.l1_called)
+        self.assertEqual(True, c1.l2_called)
+        self.assertEqual(False, c2.l1_called)
+        self.assertEqual(True, c2.l2_called)
         
 if __name__ == '__main__':
     import rosunit
