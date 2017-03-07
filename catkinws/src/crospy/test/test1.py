@@ -2,7 +2,7 @@
 PKG='test1'
 import unittest
 import rospy
-from crospy import CROS, CROSync, CPy, cpylayer, cpybase, crosyncserver
+from crospy import CROS, CROSync, CPy, cpylayer, cpybase
 
 class CPy1(CPy):
     def __init__(self):
@@ -198,9 +198,9 @@ class CROSTest(unittest.TestCase):
         self.assertEqual(True, c2.l2_called)
 
 class CROSync1(CROSync):
-    def __init__(self):
+    def __init__(self, n):
+        CROSync.__init__(self, n, '')
         self.reset()
-        CROSync.__init__(self)
 
     def reset(self):
         self.base_called = False
@@ -224,7 +224,7 @@ def test_3l2(self):
     self.l2_called = True
     self.proceed()
     
-class CROSync2(CROSync):
+class CROSync2(CROSync1):
     pass
     
 @cpylayer(CROSync2, 'l1', 'test')
@@ -240,16 +240,16 @@ class CROSyncTest(unittest.TestCase):
         super(CROSyncTest, self).__init__(*args, **kwargs)
         
     def test_base_called(self):
-        c1 = CROSync1()
-        c2 = CROSync2()
+        c1 = CROSync1(1)
+        c2 = CROSync2(2)
         c1.test()
         c2.test()
         self.assertEqual(True, c1.base_called)
         self.assertEqual(True, c2.base_called)
 
     def test_l1_active(self):
-        c1 = CROSync1()
-        c2 = CROSync2()
+        c1 = CROSync1(3)
+        c2 = CROSync2(4)
         c1.activate('l1')
         c1.test()
         c2.test()
@@ -257,8 +257,8 @@ class CROSyncTest(unittest.TestCase):
         self.assertEqual(True, c2.l1_called)
 
     def test_l1l2_active(self):
-        c1 = CROSync1()
-        c2 = CROSync2()
+        c1 = CROSync1(1)
+        c2 = CROSync2(2)
         c1.activate('l1')
         c1.activate('l2')
         self.assertEqual(['base', 'l1', 'l2'], c1._layer)
@@ -272,7 +272,6 @@ class CROSyncTest(unittest.TestCase):
 if __name__ == '__main__':
     import rosunit
     rospy.init_node('test', anonymous=True)
-    crosyncserver()
     rosunit.unitrun(PKG, 'test_CPy', CPyTest)
     rosunit.unitrun(PKG, 'test_CROS', CROSTest)
     rosunit.unitrun(PKG, 'test_CROSync', CROSyncTest)
