@@ -14,10 +14,13 @@ rosrun simple active.py
 ```
 source ./devel/setup.bash # if you are using bash
 catkin_make
+rosrun crospy crospyserver.py
 rosrun crospy test1.py
 ```
 
 ## TODO
-- add reliable layer change feature (using service call?)
 - share current layer state in a same program
+- automatically unsubscribe services at the end of the node
 
+## DONE
+- add reliable layer change feature (using service call?)
