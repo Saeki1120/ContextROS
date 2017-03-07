@@ -257,10 +257,12 @@ class CROSyncTest(unittest.TestCase):
         self.assertEqual(True, c2.l1_called)
 
     def test_l1l2_active(self):
-        c1 = CROSync1(1)
-        c2 = CROSync2(2)
+        c1 = CROSync1(5)
+        c2 = CROSync2(6)
         c1.activate('l1')
         c1.activate('l2')
+        c1.test()
+        c2.test()
         self.assertEqual(['base', 'l1', 'l2'], c1._layer)
         self.assertEqual(['base', 'l1', 'l2'], c2._layer)
         self.assertEqual(False, c1.l1_called)

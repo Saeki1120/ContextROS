@@ -1,6 +1,6 @@
 import multiprocessing
 import rospy
-from crospy.srv import pub, sub
+from crospy.srv import pub, sub, subResponse, pubResponse
 from std_msgs.msg import String
 
 class CPy(object):
@@ -95,13 +95,14 @@ class CROSync(CPy):
         
         CPy.__init__(self)
         self.group = group
-        # subscribe
+        # subscribe (from this to server)
         rospy.wait_for_service(crosyncsub(group))
         subscribe = rospy.ServiceProxy(crosyncsub(group), sub)
         subscribe(crosyncpub(node, group))
-        # set publish
-        rospy.wait_for_service(crosyncpub(group))
-        self.publish = rospy.ServiceProxy(crosyncpub(group), pub)
+        # set publish (from this to server)
+        rospy.wait_for_service(crosyncpub(0, group))
+        self.publish = rospy.ServiceProxy(crosyncpub(0, group), pub)
+        # receive publish (from server to this)
         rospy.Service(crosyncpub(node, group), pub, handle_pub)
 
     def activate(self, layer):
@@ -112,9 +113,10 @@ class CROSync(CPy):
 
     def handle_pub(self, data):
         if data.type == 'act':
-            self.receive_activation(self, data.layer)
+            self.receive_activation(data.layer)
         else:
-            self.receive_deactivation(self, data.layer)
+            self.receive_deactivation(data.layer)
+        return pubResponse(0)
     
     def receive_activation(self, layer):
         CPy.activate(self, layer)
@@ -122,18 +124,18 @@ class CROSync(CPy):
     def receive_deactivation(self, layer):
         CPy.deactivate(self, layer)
 
-crossyncserver_client = []
-crossyncserver_p = False
 def crosyncserver(group=''):
+    crossyncserver_client = []
+    
     def handle_sub(req):
-        name = crosyncpub(req.client, group)
-        crossyncserver_client.append(rospy.ServiceProxy(name, pub))
-        req.ret = 0
+        crossyncserver_client.append(rospy.ServiceProxy(req.client, pub))
+        print('sub: ' + req.client)
+        return subResponse(0)
 
     def handle_pub(req):
         for c in crossyncserver_client:
             c(req.type, req.layer)
-        req.ret = 0
+        return pubResponse(0)
 
     def server():
         print('server starting...')
@@ -144,9 +146,4 @@ def crosyncserver(group=''):
         print('server started')
         rospy.spin()
 
-    crossyncserver_p = multiprocessing.Process(target=server)
-    crossyncserver_p.start()
-
-def croserver_kill():
-    crossyncserver_p.terminate()
-    #crossyncserver_p.join()
+    server()
