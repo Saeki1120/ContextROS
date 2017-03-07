@@ -2,7 +2,7 @@
 PKG='test1'
 import unittest
 import rospy
-from crospy import CROS, CROSync, CPy, cpylayer, cpybase
+from crospy import CROS, CROSync, CPy, cpylayer, cpybase, crosyncserver
 
 class CPy1(CPy):
     def __init__(self):
@@ -200,7 +200,7 @@ class CROSTest(unittest.TestCase):
 class CROSync1(CROSync):
     def __init__(self):
         self.reset()
-        CROS.__init__(self)
+        CROSync.__init__(self)
 
     def reset(self):
         self.base_called = False
@@ -238,10 +238,6 @@ def test_4l2(self):
 class CROSyncTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(CROSyncTest, self).__init__(*args, **kwargs)
-        self.r = rospy.Rate(1)
-
-    def sleep(self):
-        self.r.sleep()
         
     def test_base_called(self):
         c1 = CROSync1()
@@ -276,6 +272,7 @@ class CROSyncTest(unittest.TestCase):
 if __name__ == '__main__':
     import rosunit
     rospy.init_node('test', anonymous=True)
+    crosyncserver()
     rosunit.unitrun(PKG, 'test_CPy', CPyTest)
     rosunit.unitrun(PKG, 'test_CROS', CROSTest)
     rosunit.unitrun(PKG, 'test_CROSync', CROSyncTest)

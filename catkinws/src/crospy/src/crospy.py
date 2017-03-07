@@ -1,4 +1,7 @@
+import threading
+import time
 import rospy
+from crospy.srv import pub, sub
 from std_msgs.msg import String
 
 class CPy(object):
@@ -79,4 +82,55 @@ class CROS(CPy):
 
     def receive_deactivation(self, data):
         CPy.deactivate(self, data.data)
-        
+
+def crosyncsub(group = ''):
+    return 'cros/sync/' + group + 'sub'
+
+def crosyncpub(node, group = ''):
+    return 'cros/sync/' + group + 'pub/' + str(node)
+
+class CROSync(CPy):
+    def __init__(self, node='0', group=''):
+        CPy.__init__(self)
+        self.group = group
+        rospy.wait_for_service(crosyncsub(group), sub)
+        self.publish = rospy.ServiceProxy(crosyncsub(group))
+        rospy.wait_for_service(crosyncpub(node, group), pub)
+        rospy.Service(crosyncpub(node, group), pub, lambda d: self.handle_pub(d))
+
+    def activate(self, layer):
+        self.publish('act', layer)
+
+    def deactivate(self, layer):
+        self.publish('dea', layer)
+
+    def handle_pub(self, data):
+        if data.type == 'act':
+            self.receive_activation(self, data.layer)
+        else:
+            self.receive_deactivation(self, data.layer)
+    
+    def receive_activation(self, layer):
+        CPy.activate(self, layer)
+
+    def receive_deactivation(self, layer):
+        CPy.deactivate(self, layer)
+
+crossyncserver_client = []
+def crosyncserver(group=''):
+    def handle_sub(req):
+        name = crosyncpub(req.client, group)
+        crossyncserver_client.append(rospy.ServiceProxy(name))
+        req.ret = 0
+
+    def handle_pub(req):
+        for c in crossyncserver_client:
+            c(req.type, req.layer)
+
+    def server():
+        rospy.wait_for_service(crosyncsub(group))
+        rospy.Service(crosyncsub(group), sub, handle_sub)
+        time.sleep(100000)
+
+    t = threading.Thread(target=server, name="crosserfver")
+    t.start()
