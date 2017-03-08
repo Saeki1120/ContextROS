@@ -106,10 +106,10 @@ class Critical(object):
         self.obj = obj
 
     def __enter__(self):
-        obj.begin()
+        self.obj.begin()
 
     def __exit__(self, type, value, traceback):
-        obj.end()
+        self.obj.end()
         
 class Layer(object):
     def __init__(self, layer):
