@@ -72,7 +72,7 @@ class CPyQ(CPy):
     @classmethod
     def deactivate(cls, layer):
         for i in CPyQ.instances:
-            i.req_activate(layer)
+            i.req_deactivate(layer)
 
     def req_activate(self, layer):
         if self.in_critical:
@@ -98,7 +98,7 @@ class CPyQ(CPy):
             if r[0] == 'act':
                 CPy.activate(self, r[1])
             elif r[0] == 'dea':
-                CPy.activate(self, r[1])
+                CPy.deactivate(self, r[1])
         self.queued_request = []
 
 class Critical(object):
