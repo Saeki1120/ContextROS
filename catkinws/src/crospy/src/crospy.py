@@ -55,6 +55,72 @@ def cpylayer(cls, layer, name):
         cls.add_method(layer, name, func)
     return f
 
+class CPyQ(CPy):
+    instances = []
+    
+    def __init__(self):
+        CPy.__init__(self)
+        self.queued_request = []
+        self.in_critical = False
+        CPyQ.instances.append(self)
+
+    @classmethod
+    def activate(cls, layer):
+        for i in CPyQ.instances:
+            i.req_activate(layer)
+            
+    @classmethod
+    def deactivate(cls, layer):
+        for i in CPyQ.instances:
+            i.req_deactivate(layer)
+
+    def req_activate(self, layer):
+        if self.in_critical:
+            self.queued_request.append(('act', layer))
+        else:
+            CPy.activate(self, layer)
+
+    def req_deactivate(self, layer):
+        if self.in_critical:
+            self.queued_request.append(('dea', layer))
+        else:
+            CPy.deactivate(self, layer)
+            
+    def begin(self):
+        self.in_critical = True
+
+    def end(self):
+        self.do()
+        self.in_critical = False
+
+    def do(self):
+        for r in self.queued_request:
+            if r[0] == 'act':
+                CPy.activate(self, r[1])
+            elif r[0] == 'dea':
+                CPy.deactivate(self, r[1])
+        self.queued_request = []
+
+class Critical(object):
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __enter__(self):
+        self.obj.begin()
+
+    def __exit__(self, type, value, traceback):
+        self.obj.end()
+        
+class Layer(object):
+    def __init__(self, layer):
+        self.layer = layer
+
+    def __enter__(self):
+        CPyQ.activate(self.layer)
+
+    def __exit__(self, type, value, traceback):
+        CPyQ.deactivate(self.layer)
+        
 class CROS(CPy):
     """ContextROS"""
 
