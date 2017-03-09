@@ -44,16 +44,15 @@ class CPyQTest(unittest.TestCase):
             self.assertEqual(False, obj.l1_callee_called)
             self.assertEqual(True, obj.base_callee_called)
 
+            # check queue contents
             self.assertEqual([('act', 'l1'), ('act', 'l2'), ('dea', 'l2')], obj.queued_request)
 
         self.assertEqual(['base', 'l1'], obj._layer)
         obj.callee() # activated l1, deactivated l2
         self.assertEqual(True, obj.l1_callee_called)
+        self.assertEqual(False, obj.l2_callee_called)
 
 if __name__ == '__main__':
     import rosunit
     rospy.init_node('test_cpyq', anonymous=True)
     rosunit.unitrun(PKG, 'test_CPyQ', CPyQTest)
-
-
-
