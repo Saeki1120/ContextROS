@@ -1,14 +1,14 @@
-import multiprocessing
 import rospy
 from crospy.srv import pub, sub, subResponse, pubResponse
 from std_msgs.msg import String
+
 
 class CPy(object):
     @classmethod
     def init_layer(cls):
         if not hasattr(cls, 'layers'):
             cls.layers = {}
-    
+
     @classmethod
     def add_layer(cls, layer):
         cls.init_layer()
@@ -20,7 +20,7 @@ class CPy(object):
         if layer not in cls.layers:
             cls.add_layer(layer)
         cls.layers[layer][name] = method
-        
+
     def __init__(self):
         # array of activated layers
         self._layer = ['base']
@@ -31,7 +31,7 @@ class CPy(object):
 
     def purge_cache(self):
         self.cache = {}
-        
+
     def activate(self, layer):
         self.purge_cache()
         self._layer.append(layer)
@@ -46,16 +46,18 @@ class CPy(object):
         self._proceed_funcs.append(current)
         return retval
 
+
 def cpybase(func):
     def activated_funcs(self, fname):
-        a = [func] # for base
+        a = [func]  # for base
         try:
             a.extend([self.__class__.layers[l][fname]
-                          for l in self._layer if l in self.__class__.layers])
+                      for l in self._layer
+                      if l in self.__class__.layers])
         except:
             pass
         return a
-    
+
     def f(self, *args, **kwargs):
         fname = func.__name__
         if fname in self.cache:
@@ -64,17 +66,19 @@ def cpybase(func):
             self._proceed_funcs = activated_funcs(self, fname)
             self.cache[fname] = self._proceed_funcs
         return self.proceed(*args, **kwargs)
-    
+
     return f
+
 
 def cpylayer(cls, layer, name):
     def f(func):
         cls.add_method(layer, name, func)
     return f
 
+
 class CPyQ(CPy):
     instances = []
-    
+
     def __init__(self):
         CPy.__init__(self)
         self.queued_request = []
@@ -85,7 +89,7 @@ class CPyQ(CPy):
     def activate(cls, layer):
         for i in CPyQ.instances:
             i.req_activate(layer)
-            
+
     @classmethod
     def deactivate(cls, layer):
         for i in CPyQ.instances:
@@ -102,7 +106,7 @@ class CPyQ(CPy):
             self.queued_request.append(('dea', layer))
         else:
             CPy.deactivate(self, layer)
-            
+
     def begin(self):
         self.in_critical = True
 
@@ -118,6 +122,7 @@ class CPyQ(CPy):
                 CPy.deactivate(self, r[1])
         self.queued_request = []
 
+
 class Critical(object):
     def __init__(self, obj):
         self.obj = obj
@@ -127,7 +132,8 @@ class Critical(object):
 
     def __exit__(self, type, value, traceback):
         self.obj.end()
-        
+
+
 class Layer(object):
     def __init__(self, layer):
         self.layer = layer
@@ -137,7 +143,8 @@ class Layer(object):
 
     def __exit__(self, type, value, traceback):
         CPyQ.deactivate(self.layer)
-        
+
+
 class CROS(CPy):
     """ContextROS"""
 
@@ -151,7 +158,8 @@ class CROS(CPy):
         # for deactivate
         topic = 'cros/' + group + '/deactivate'
         self.deactpub = rospy.Publisher(topic, String, queue_size=10)
-        self.deactsub = rospy.Subscriber(topic, String, self.receive_deactivation)
+        self.deactsub = rospy.Subscriber(topic, String,
+                                         self.receive_deactivation)
 
     def activate(self, layer):
         self.actpub.publish(layer)
@@ -165,17 +173,20 @@ class CROS(CPy):
     def receive_deactivation(self, data):
         CPy.deactivate(self, data.data)
 
-def crosyncsub(group = ''):
+
+def crosyncsub(group=''):
     return 'cros/sync/' + group + 'sub'
 
-def crosyncpub(node, group = ''):
+
+def crosyncpub(node, group=''):
     return 'cros/sync/' + group + 'pub/' + str(node)
+
 
 class CROSync(CPy):
     def __init__(self, node='0', group=''):
         def handle_pub(data):
             return self.handle_pub(data)
-        
+
         CPy.__init__(self)
         self.group = group
         # subscribe (from this to server)
@@ -200,16 +211,17 @@ class CROSync(CPy):
         else:
             self.receive_deactivation(data.layer)
         return pubResponse(0)
-    
+
     def receive_activation(self, layer):
         CPy.activate(self, layer)
 
     def receive_deactivation(self, layer):
         CPy.deactivate(self, layer)
 
+
 def crosyncserver(group=''):
     crossyncserver_client = []
-    
+
     def handle_sub(req):
         crossyncserver_client.append(rospy.ServiceProxy(req.client, pub))
         print('sub: ' + req.client)
