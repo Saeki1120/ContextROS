@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+
+# this script is for evaluating performances of method calls
+#   here three version of method call are impleneted
+#   1. ordinaly
+#   2. cached (which keep activated function lists)
+#   3. generator (lazy evaluation)
+# according to the result of evaluation, i decided to employ cached version.
+
 PKG='perfeval'
 
 import rospy
@@ -183,5 +191,3 @@ if __name__ == '__main__':
     run_test('gen:', 'test_nolayer_activated', 'CPy3()')
     run_test('gen:', 'test_layer1_activated', 'CPy3()')
     run_test('gen:', 'test_layer1_2_activated', 'CPy3()')
-
-    
