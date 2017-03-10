@@ -2,16 +2,16 @@
 
 import unittest
 import rospy
-from crospy import CPy, cpylayer, cpybase
+from crospy import CPySingle, cpylayer, cpybase
 
 PKG = 'testcpy'
 
 
-class CPy1(CPy):
+class CPy1(CPySingle):
 
     def __init__(self):
         self.reset()
-        CPy.__init__(self)
+        super(CPy1, self).__init__()
 
     def reset(self):
         self.base_called = False
@@ -38,11 +38,11 @@ def test_l2(self):
     self.proceed()
 
 
-class CPy2(CPy):
+class CPy2(CPySingle):
 
     def __init__(self):
         self.reset()
-        CPy.__init__(self)
+        super(CPy2, self).__init__()
 
     @cpybase
     def test(self):

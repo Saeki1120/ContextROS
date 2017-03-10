@@ -3,7 +3,8 @@ from crospy.srv import pub, sub, subResponse, pubResponse
 from std_msgs.msg import String
 
 
-class CPy(object):
+class CPySingle(object):
+
     @classmethod
     def init_layer(cls):
         if not hasattr(cls, 'layers'):
@@ -22,6 +23,7 @@ class CPy(object):
         cls.layers[layer][name] = method
 
     def __init__(self):
+        super(CPySingle, self).__init__()
         # array of activated layers
         self._layer = ['base']
         # array of valid functions for proceeds, init at method call
@@ -76,36 +78,36 @@ def cpylayer(cls, layer, name):
     return f
 
 
-class CPyQ(CPy):
+class CPy(CPySingle):
     instances = []
 
     def __init__(self):
-        CPy.__init__(self)
+        super(CPy, self).__init__()
         self.queued_request = []
         self.in_critical = False
-        CPyQ.instances.append(self)
+        CPy.instances.append(self)
 
     @classmethod
     def activate(cls, layer):
-        for i in CPyQ.instances:
+        for i in CPy.instances:
             i.req_activate(layer)
 
     @classmethod
     def deactivate(cls, layer):
-        for i in CPyQ.instances:
+        for i in CPy.instances:
             i.req_deactivate(layer)
 
     def req_activate(self, layer):
         if self.in_critical:
             self.queued_request.append(('act', layer))
         else:
-            CPy.activate(self, layer)
+            super(CPy, self).activate(layer)
 
     def req_deactivate(self, layer):
         if self.in_critical:
             self.queued_request.append(('dea', layer))
         else:
-            CPy.deactivate(self, layer)
+            super(CPy, self).deactivate(layer)
 
     def begin(self):
         self.in_critical = True
@@ -117,13 +119,14 @@ class CPyQ(CPy):
     def do(self):
         for r in self.queued_request:
             if r[0] == 'act':
-                CPy.activate(self, r[1])
+                super(CPy, self).activate(r[1])
             elif r[0] == 'dea':
-                CPy.deactivate(self, r[1])
+                super(CPy, self).deactivate(r[1])
         self.queued_request = []
 
 
 class Critical(object):
+
     def __init__(self, obj):
         self.obj = obj
 
@@ -135,14 +138,15 @@ class Critical(object):
 
 
 class Layer(object):
+
     def __init__(self, layer):
         self.layer = layer
 
     def __enter__(self):
-        CPyQ.activate(self.layer)
+        CPy.activate(self.layer)
 
     def __exit__(self, type, value, traceback):
-        CPyQ.deactivate(self.layer)
+        CPy.deactivate(self.layer)
 
 
 class CROS(CPy):
@@ -183,6 +187,7 @@ def crosyncpub(node, group=''):
 
 
 class CROSync(CPy):
+
     def __init__(self, node='0', group=''):
         def handle_pub(data):
             return self.handle_pub(data)
