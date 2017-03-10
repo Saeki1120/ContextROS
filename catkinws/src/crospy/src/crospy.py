@@ -3,7 +3,8 @@ from crospy.srv import pub, sub, subResponse, pubResponse
 from std_msgs.msg import String
 
 
-class CPy(object):
+class CPySingle(object):
+
     @classmethod
     def init_layer(cls):
         if not hasattr(cls, 'layers'):
@@ -22,6 +23,7 @@ class CPy(object):
         cls.layers[layer][name] = method
 
     def __init__(self):
+        super(CPySingle, self).__init__()
         # array of activated layers
         self._layer = ['base']
         # array of valid functions for proceeds, init at method call
@@ -76,36 +78,36 @@ def cpylayer(cls, layer, name):
     return f
 
 
-class CPyQ(CPy):
+class CPy(CPySingle):
     instances = []
 
     def __init__(self):
-        CPy.__init__(self)
+        super(CPy, self).__init__()
         self.queued_request = []
         self.in_critical = False
-        CPyQ.instances.append(self)
+        CPy.instances.append(self)
 
     @classmethod
     def activate(cls, layer):
-        for i in CPyQ.instances:
+        for i in CPy.instances:
             i.req_activate(layer)
 
     @classmethod
     def deactivate(cls, layer):
-        for i in CPyQ.instances:
+        for i in CPy.instances:
             i.req_deactivate(layer)
 
     def req_activate(self, layer):
         if self.in_critical:
             self.queued_request.append(('act', layer))
         else:
-            CPy.activate(self, layer)
+            super(CPy, self).activate(layer)
 
     def req_deactivate(self, layer):
         if self.in_critical:
             self.queued_request.append(('dea', layer))
         else:
-            CPy.deactivate(self, layer)
+            super(CPy, self).deactivate(layer)
 
     def begin(self):
         self.in_critical = True
@@ -117,13 +119,14 @@ class CPyQ(CPy):
     def do(self):
         for r in self.queued_request:
             if r[0] == 'act':
-                CPy.activate(self, r[1])
+                super(CPy, self).activate(r[1])
             elif r[0] == 'dea':
-                CPy.deactivate(self, r[1])
+                super(CPy, self).deactivate(r[1])
         self.queued_request = []
 
 
 class Critical(object):
+
     def __init__(self, obj):
         self.obj = obj
 
@@ -135,43 +138,15 @@ class Critical(object):
 
 
 class Layer(object):
+
     def __init__(self, layer):
         self.layer = layer
 
     def __enter__(self):
-        CPyQ.activate(self.layer)
+        CPy.activate(self.layer)
 
     def __exit__(self, type, value, traceback):
-        CPyQ.deactivate(self.layer)
-
-
-class CROS(CPy):
-    """ContextROS"""
-
-    def __init__(self, group=''):
-        CPy.__init__(self)
-        # for activate
-        topic = 'cros/' + group + '/activate'
-        print(topic)
-        self.actpub = rospy.Publisher(topic, String, queue_size=10)
-        self.actsub = rospy.Subscriber(topic, String, self.receive_activation)
-        # for deactivate
-        topic = 'cros/' + group + '/deactivate'
-        self.deactpub = rospy.Publisher(topic, String, queue_size=10)
-        self.deactsub = rospy.Subscriber(topic, String,
-                                         self.receive_deactivation)
-
-    def activate(self, layer):
-        self.actpub.publish(layer)
-
-    def deactivate(self, layer):
-        self.deactpub.publish(layer)
-
-    def receive_activation(self, data):
-        CPy.activate(self, data.data)
-
-    def receive_deactivation(self, data):
-        CPy.deactivate(self, data.data)
+        CPy.deactivate(self.layer)
 
 
 def crosyncsub(group=''):
@@ -182,53 +157,117 @@ def crosyncpub(node, group=''):
     return 'cros/sync/' + group + 'pub/' + str(node)
 
 
-class CROSync(CPy):
-    def __init__(self, node='0', group=''):
-        def handle_pub(data):
-            return self.handle_pub(data)
+class CROSNode(object):
+    _instance = None
 
-        CPy.__init__(self)
-        self.group = group
+    def __new__(cls, is_sync, node, group):
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+            # error check have to be done
+            if is_sync:
+                cls._instance.sync_init(node, group)
+            else:
+                cls._instance.async_init(group)
+
+        return cls._instance
+
+    def async_init(self, group):
+        def handle_activate(data):
+            if rospy.get_name() != data._connection_header['callerid']:
+                CROS._activate_local(data.data)
+
+        def handle_deactivate(data):
+            if rospy.get_name() != data._connection_header['callerid']:
+                CROS._deactivate_local(data.data)
+
+        self.is_sync = False
+
+        # for activate
+        topic = 'cros/' + group + '/activate'
+        self.actpub = rospy.Publisher(topic, String, queue_size=10)
+        self.actsub = rospy.Subscriber(topic, String, handle_activate)
+        # for deactivate
+        topic = 'cros/' + group + '/deactivate'
+        self.deactpub = rospy.Publisher(topic, String, queue_size=10)
+        self.deactsub = rospy.Subscriber(topic, String, handle_deactivate)
+
+    def sync_init(self, node, group):
+        def handle_publish(data):
+            if data.type == 'act':
+                CROS._activate_local(data.layer)
+            else:
+                CROS._deactivate_local(data.layer)
+            return pubResponse(0)
+
+        self.is_sync = True
+
         # subscribe (from this to server)
         rospy.wait_for_service(crosyncsub(group))
         subscribe = rospy.ServiceProxy(crosyncsub(group), sub)
         subscribe(crosyncpub(node, group))
         # set publish (from this to server)
         rospy.wait_for_service(crosyncpub(0, group))
-        self.publish = rospy.ServiceProxy(crosyncpub(0, group), pub)
+        self.crosync_publish = rospy.ServiceProxy(crosyncpub(0, group), pub)
         # receive publish (from server to this)
-        rospy.Service(crosyncpub(node, group), pub, handle_pub)
+        rospy.Service(crosyncpub(node, group), pub, handle_publish)
+        # save path
+        self.crosync_path = (node, group)
 
-    def activate(self, layer):
-        self.publish('act', layer)
-
-    def deactivate(self, layer):
-        self.publish('dea', layer)
-
-    def handle_pub(self, data):
-        if data.type == 'act':
-            self.receive_activation(data.layer)
+    def send_activate(self, layer):
+        if self.is_sync:
+            self.crosync_publish('act', layer)
         else:
-            self.receive_deactivation(data.layer)
-        return pubResponse(0)
+            self.actpub.publish(layer)
 
-    def receive_activation(self, layer):
-        CPy.activate(self, layer)
+    def send_deactivate(self, layer):
+        if self.is_sync:
+            self.crosync_publish('dea', layer)
+        else:
+            self.deactpub.publish(layer)
 
-    def receive_deactivation(self, layer):
-        CPy.deactivate(self, layer)
+
+class CROS(CPy):
+
+    def __init__(self, is_sync=False, node='0', group=''):
+        self.node = CROSNode(is_sync, node, group)
+        super(CROS, self).__init__()
+
+    # it activate the layer in the local classes
+    # user should not call
+    @classmethod
+    def _activate_local(cls, layer):
+        CPy.activate(layer)
+
+    # it deactivate the layer in the local classes
+    # user should not call
+    @classmethod
+    def _deactivate_local(cls, layer):
+        CPy.deactivate(layer)
+
+    # user can call this activation method
+    def activate(self, layer):
+        self.node.send_activate(layer)
+        CROS._activate_local(layer)
+
+    # user can call this dectivation method
+    def deactivate(self, layer):
+        self.node.send_deactivate(layer)
+        CROS._deactivate_local(layer)
 
 
 def crosyncserver(group=''):
     crossyncserver_client = []
 
     def handle_sub(req):
-        crossyncserver_client.append(rospy.ServiceProxy(req.client, pub))
+        callerid = req._connection_header['callerid']
+        proxyobj = rospy.ServiceProxy(req.client, pub)
+        crossyncserver_client.append((callerid, proxyobj))
         print('sub: ' + req.client)
         return subResponse(0)
 
     def handle_pub(req):
-        for c in crossyncserver_client:
+        callerid = req._connection_header['callerid']
+        for c in [c[1] for c in crossyncserver_client if c[0] != callerid]:
             c(req.type, req.layer)
         return pubResponse(0)
 
