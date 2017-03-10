@@ -26,11 +26,18 @@ class CPy(object):
         self._layer = ['base']
         # array of valid functions for proceeds, init at method call
         self._proceed_funcs = []
+        # cache
+        self.purge_cache()
 
+    def purge_cache(self):
+        self.cache = {}
+        
     def activate(self, layer):
+        self.purge_cache()
         self._layer.append(layer)
 
     def deactivate(self, layer):
+        self.purge_cache()
         self._layer.remove(layer)
 
     def proceed(self, *args, **kwargs):
@@ -40,15 +47,25 @@ class CPy(object):
         return retval
 
 def cpybase(func):
-    def inner(self, *args, **kwargs):
-        self._proceed_funcs = [func] # for base
+    def activated_funcs(self, fname):
+        a = [func] # for base
         try:
-            self._proceed_funcs.extend([self.__class__.layers[l][func.__name__]
-                                            for l in self._layer if l in self.__class__.layers])
+            a.extend([self.__class__.layers[l][fname]
+                          for l in self._layer if l in self.__class__.layers])
         except:
             pass
+        return a
+    
+    def f(self, *args, **kwargs):
+        fname = func.__name__
+        if fname in self.cache:
+            self._proceed_funcs = self.cache[fname]
+        else:
+            self._proceed_funcs = activated_funcs(self, fname)
+            self.cache[fname] = self._proceed_funcs
         return self.proceed(*args, **kwargs)
-    return inner
+    
+    return f
 
 def cpylayer(cls, layer, name):
     def f(func):
