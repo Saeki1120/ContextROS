@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import unittest
 import rospy
-from crospy import CPyQ, cpylayer, cpybase, Critical
+from crospy import CPy, cpylayer, cpybase, Critical
 
-PKG = 'cpyq'
+PKG = 'cpy'
 
 
-class CPyQ1(CPyQ):
+class CPyQ1(CPy):
 
     def __init__(self):
-        CPyQ.__init__(self)
+        super(CPyQ1, self).__init__()
         self.base_callee_called = False
         self.l1_callee_called = False
         self.l2_callee_called = False
