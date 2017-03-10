@@ -150,7 +150,6 @@ class Layer(object):
 
 
 class CROS(CPy):
-    """ContextROS"""
 
     def __init__(self, group=''):
         CPy.__init__(self)
@@ -186,54 +185,85 @@ def crosyncpub(node, group=''):
     return 'cros/sync/' + group + 'pub/' + str(node)
 
 
-class CROSync(CPy):
+class CROSyncNode(object):
+    _instance = None
 
-    def __init__(self, node='0', group=''):
-        def handle_pub(data):
-            return self.handle_pub(data)
+    def __new__(cls, node, group):
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+            cls._instance.init(node, group)
 
-        CPy.__init__(self)
-        self.group = group
+        return cls._instance
+
+    def init(self, node, group):
+        def handle_publish(data):
+            if data.type == 'act':
+                CROSync._activate_local(data.layer)
+            else:
+                CROSync._deactivate_local(data.layer)
+            return pubResponse(0)
+
         # subscribe (from this to server)
         rospy.wait_for_service(crosyncsub(group))
         subscribe = rospy.ServiceProxy(crosyncsub(group), sub)
         subscribe(crosyncpub(node, group))
         # set publish (from this to server)
         rospy.wait_for_service(crosyncpub(0, group))
-        self.publish = rospy.ServiceProxy(crosyncpub(0, group), pub)
+        self.crosync_publish = rospy.ServiceProxy(crosyncpub(0, group), pub)
         # receive publish (from server to this)
-        rospy.Service(crosyncpub(node, group), pub, handle_pub)
+        rospy.Service(crosyncpub(node, group), pub, handle_publish)
+        # save path
+        self.crosync_path = (node, group)
 
+    def send_activate(self, layer):
+        self.crosync_publish('act', layer)
+
+    def send_deactivate(self, layer):
+        self.crosync_publish('dea', layer)
+
+
+class CROSync(CPy):
+
+    def __init__(self, node='0', group=''):
+        self.node = CROSyncNode(node, group)
+        super(CROSync, self).__init__()
+
+    # it activate the layer in the local classes
+    # user should not call
+    @classmethod
+    def _activate_local(cls, layer):
+        CPy.activate(layer)
+
+    # it deactivate the layer in the local classes
+    # user should not call
+    @classmethod
+    def _deactivate_local(cls, layer):
+        CPy.deactivate(layer)
+
+    # user can call this activation method
     def activate(self, layer):
-        self.publish('act', layer)
+        self.node.send_activate(layer)
+        CROSync._activate_local(layer)
 
+    # user can call this dectivation method
     def deactivate(self, layer):
-        self.publish('dea', layer)
-
-    def handle_pub(self, data):
-        if data.type == 'act':
-            self.receive_activation(data.layer)
-        else:
-            self.receive_deactivation(data.layer)
-        return pubResponse(0)
-
-    def receive_activation(self, layer):
-        CPy.activate(self, layer)
-
-    def receive_deactivation(self, layer):
-        CPy.deactivate(self, layer)
+        self.node.send_deactivate(layer)
+        CROSync._deactivate_local(layer)
 
 
 def crosyncserver(group=''):
     crossyncserver_client = []
 
     def handle_sub(req):
-        crossyncserver_client.append(rospy.ServiceProxy(req.client, pub))
+        callerid = req._connection_header['callerid']
+        proxyobj = rospy.ServiceProxy(req.client, pub)
+        crossyncserver_client.append((callerid, proxyobj))
         print('sub: ' + req.client)
         return subResponse(0)
 
     def handle_pub(req):
-        for c in crossyncserver_client:
+        callerid = req._connection_header['callerid']
+        for c in [c[1] for c in crossyncserver_client if c[0] != callerid]:
             c(req.type, req.layer)
         return pubResponse(0)
 
