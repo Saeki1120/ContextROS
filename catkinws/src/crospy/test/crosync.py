@@ -2,15 +2,15 @@
 
 import unittest
 import rospy
-from crospy import CROSync, cpylayer, cpybase
+from crospy import CROS, cpylayer, cpybase
 
 PKG = 'crosync'
 
 
-class CROSync1(CROSync):
+class CROSync1(CROS):
 
     def __init__(self, n):
-        CROSync.__init__(self, n, '')
+        super(CROSync1, self).__init__(True, n, '')
         self.reset()
 
     def reset(self):

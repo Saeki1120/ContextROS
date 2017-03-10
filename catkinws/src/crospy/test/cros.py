@@ -11,7 +11,7 @@ class CROS1(CROS):
 
     def __init__(self):
         self.reset()
-        CROS.__init__(self)
+        super(CROS1, self).__init__()
 
     def reset(self):
         self.base_called = False

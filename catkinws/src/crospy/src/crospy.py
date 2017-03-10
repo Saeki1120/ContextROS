@@ -149,34 +149,6 @@ class Layer(object):
         CPy.deactivate(self.layer)
 
 
-class CROS(CPy):
-
-    def __init__(self, group=''):
-        CPy.__init__(self)
-        # for activate
-        topic = 'cros/' + group + '/activate'
-        print(topic)
-        self.actpub = rospy.Publisher(topic, String, queue_size=10)
-        self.actsub = rospy.Subscriber(topic, String, self.receive_activation)
-        # for deactivate
-        topic = 'cros/' + group + '/deactivate'
-        self.deactpub = rospy.Publisher(topic, String, queue_size=10)
-        self.deactsub = rospy.Subscriber(topic, String,
-                                         self.receive_deactivation)
-
-    def activate(self, layer):
-        self.actpub.publish(layer)
-
-    def deactivate(self, layer):
-        self.deactpub.publish(layer)
-
-    def receive_activation(self, data):
-        CPy.activate(self, data.data)
-
-    def receive_deactivation(self, data):
-        CPy.deactivate(self, data.data)
-
-
 def crosyncsub(group=''):
     return 'cros/sync/' + group + 'sub'
 
@@ -185,23 +157,49 @@ def crosyncpub(node, group=''):
     return 'cros/sync/' + group + 'pub/' + str(node)
 
 
-class CROSyncNode(object):
+class CROSNode(object):
     _instance = None
 
-    def __new__(cls, node, group):
+    def __new__(cls, is_sync, node, group):
         if cls._instance is None:
             cls._instance = object.__new__(cls)
-            cls._instance.init(node, group)
+            # error check have to be done
+            if is_sync:
+                cls._instance.sync_init(node, group)
+            else:
+                cls._instance.async_init(group)
 
         return cls._instance
 
-    def init(self, node, group):
+    def async_init(self, group):
+        def handle_activate(data):
+            if rospy.get_name() != data._connection_header['callerid']:
+                CROS._activate_local(data.data)
+
+        def handle_deactivate(data):
+            if rospy.get_name() != data._connection_header['callerid']:
+                CROS._deactivate_local(data.data)
+
+        self.is_sync = False
+
+        # for activate
+        topic = 'cros/' + group + '/activate'
+        self.actpub = rospy.Publisher(topic, String, queue_size=10)
+        self.actsub = rospy.Subscriber(topic, String, handle_activate)
+        # for deactivate
+        topic = 'cros/' + group + '/deactivate'
+        self.deactpub = rospy.Publisher(topic, String, queue_size=10)
+        self.deactsub = rospy.Subscriber(topic, String, handle_deactivate)
+
+    def sync_init(self, node, group):
         def handle_publish(data):
             if data.type == 'act':
-                CROSync._activate_local(data.layer)
+                CROS._activate_local(data.layer)
             else:
-                CROSync._deactivate_local(data.layer)
+                CROS._deactivate_local(data.layer)
             return pubResponse(0)
+
+        self.is_sync = True
 
         # subscribe (from this to server)
         rospy.wait_for_service(crosyncsub(group))
@@ -216,17 +214,23 @@ class CROSyncNode(object):
         self.crosync_path = (node, group)
 
     def send_activate(self, layer):
-        self.crosync_publish('act', layer)
+        if self.is_sync:
+            self.crosync_publish('act', layer)
+        else:
+            self.actpub.publish(layer)
 
     def send_deactivate(self, layer):
-        self.crosync_publish('dea', layer)
+        if self.is_sync:
+            self.crosync_publish('dea', layer)
+        else:
+            self.deactpub.publish(layer)
 
 
-class CROSync(CPy):
+class CROS(CPy):
 
-    def __init__(self, node='0', group=''):
-        self.node = CROSyncNode(node, group)
-        super(CROSync, self).__init__()
+    def __init__(self, is_sync=False, node='0', group=''):
+        self.node = CROSNode(is_sync, node, group)
+        super(CROS, self).__init__()
 
     # it activate the layer in the local classes
     # user should not call
@@ -243,12 +247,12 @@ class CROSync(CPy):
     # user can call this activation method
     def activate(self, layer):
         self.node.send_activate(layer)
-        CROSync._activate_local(layer)
+        CROS._activate_local(layer)
 
     # user can call this dectivation method
     def deactivate(self, layer):
         self.node.send_deactivate(layer)
-        CROSync._deactivate_local(layer)
+        CROS._deactivate_local(layer)
 
 
 def crosyncserver(group=''):
