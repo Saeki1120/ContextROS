@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-PKG = 'test1'
-
 import unittest
 import rospy
 from crospy import CROS, CROSync, CPy, cpylayer, cpybase
+
+PKG = 'test1'
 
 
 class CPy1(CPy):
