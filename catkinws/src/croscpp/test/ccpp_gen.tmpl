@@ -1,0 +1,37 @@
+#include "{{file}}"
+
+#include <map>
+#include <string>
+
+static std::string ccpp_layer;
+
+{% for m in methods %}
+static std::map <std::string, {{m.ret}} ({{m.current_class}}::*){{m.args}}> {{m.name}}_methods;
+
+{{m.ret}} {{m.current_class}}::{{m.name}} {{m.args}}
+{
+    return (this->*({{m.name}}_methods[ccpp_layer])) {{m.args}};
+}
+{% endfor %}
+
+void CCpp_init ()
+{
+    ccpp_layer = "base";
+
+    {% for m in methods %}
+    {% for l in layers %}
+    {{m.name}}_methods["{{l}}"] = &{{m.current_class}}::{{m.name}}_{{l}};
+    {% endfor %}
+    {% endfor %}
+}
+
+void CCpp_activate(std::string _layer)
+{
+    ccpp_layer = _layer;
+}
+
+void CCpp_deactivate(std::string _layer)
+{
+    ccpp_layer = "base";
+}
+
