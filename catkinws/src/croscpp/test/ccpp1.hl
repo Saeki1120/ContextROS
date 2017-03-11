@@ -1,4 +1,4 @@
-@layers = ["base", "l1"]
+@layers = [base, l1]
 
 class CCpp1
 {
