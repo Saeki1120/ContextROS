@@ -1,0 +1,7 @@
+@layers = ["base", "l1"]
+
+class CCpp1
+{
+public:
+    @base int calc (int a, int b);
+};
