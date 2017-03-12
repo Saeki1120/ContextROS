@@ -10,7 +10,7 @@ static std::map <std::string, {{m.ret}} ({{m.current_class}}::*){{m.args}}> {{m.
 
 {{m.ret}} {{m.current_class}}::{{m.name}} {{m.args}}
 {
-    return (this->*({{m.name}}_methods[ccpp_layer])) {{m.args}};
+    return (this->*({{m.name}}_methods[ccpp_layer])) ({{m.actual_args}});
 }
 {% endfor %}
 

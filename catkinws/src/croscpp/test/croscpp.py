@@ -7,6 +7,8 @@ layersm = metamodel_from_str("P:'@layers' '=' '[' layers*=ID[','] ']';")
 # it cannot deal with pointers as a ret val.
 methodm = metamodel_from_str("P:'@base' ret=ID name=ID args=/[^;]+/';';")
 classm = metamodel_from_str("P:'class' name=ID;")
+# it cannot many type of decls
+argsm = metamodel_from_str("P:'(' args*=ARG[','] ')'; ARG: type=ID name=ID;")
 
 
 def read_hl(lines):
@@ -26,6 +28,12 @@ def read_hl(lines):
         if '@base' in line:
             m = methodm.model_from_str(line)
             m.current_class = current_class
+            actual_args = ''
+            for i, arg in enumerate(argsm.model_from_str(m.args).args):
+                if i >= 1:
+                    actual_args += ','
+                actual_args += arg.name
+            m.actual_args = actual_args
             decls.append(m)
 
     return layers, decls
@@ -75,10 +83,10 @@ with open(sys.argv[1], 'r') as f:
     lines = f.readlines()
     layers, decls = read_hl(lines)
 
-with open(sys.argv[1][:-3] + '_gen.cpp', 'w') as f:
-    f.write(gen_body(layers, decls, sys.argv[1][:-1]))
+with open(sys.argv[1][: -3] + '_gen.cpp', 'w') as f:
+    f.write(gen_body(layers, decls, sys.argv[1][: -1]))
 
-with open(sys.argv[1][:-3] + '.h', 'w') as f:
+with open(sys.argv[1][: -3] + '.h', 'w') as f:
     lines = gen_header(lines, layers, decls)
     for l in lines:
         f.write(l)
