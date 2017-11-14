@@ -7,7 +7,8 @@
 class CROS
 {
 private:
-  ros::Subscriber sub;
+  static ros::Subscriber sub;
+  static ros::Publisher pub;
   static std::string layer;
 
 public:
@@ -15,6 +16,7 @@ public:
   static void layerMessageCallback(const croscpp::layer_msgType::ConstPtr& msg);
   static void activate(std::string _layer);
   static void deactivate(std::string _layer);
+  static void change_layer(std::string _layer);
   std::string now_layer();
 };
 

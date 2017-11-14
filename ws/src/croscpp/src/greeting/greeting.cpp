@@ -9,17 +9,19 @@ int main(int argc, char **argv)
 	CROS cros;
 	cros.init(n);
 
+	cros.activate("Tokyo");
+
 	ros::Rate loop_rate(1);
 	while (ros::ok()) {
-		/* code */
+		//cros.activate("Tokyo");
 		greeting(0);
-		cros.activate("Tokyo");
-		ros::spinOnce();
+		/*
 		loop_rate.sleep();
-		greeting(0);
 		cros.activate("London");
-		ros::spinOnce();
+		greeting(0);
+		*/
 		loop_rate.sleep();
+		ros::spinOnce();
 	}
 
 	return 0;

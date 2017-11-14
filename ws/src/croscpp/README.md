@@ -80,5 +80,4 @@ $ rosrun croscpp greeting_node
 
 ## Issue
 1. レイヤ記述にif, while文が記述できない
-2. ノード内でのアクティベーションしか行えず, レイヤをpubしない
 3. 単一のレイヤしか保持できない
