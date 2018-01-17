@@ -26,7 +26,6 @@ void CROS::layerMessageCallback(const croscpp::layer_msgType::ConstPtr& msg)
 void CROS::activate(std::string _layer)
 {
     //localなレイヤを更新
-    layer = _layer;
     change_layer(_layer);
 
     //更新されたレイヤの配布
