@@ -54,15 +54,15 @@ int main(int argc, char **argv)
 
 ROSマスターの起動
 
-'''
+```
 $ roscore
-'''
+```
 
 greetingアプリケーションの実行
 
-'''
+```
 $ rosrun croscpp greeting_node
-'''
+```
 
 交互にレイヤを切り替えながら挨拶を表示する
 
