@@ -199,4 +199,4 @@ include_directories(
 #add_rostest(test/test1.test)
 
 ## Add folders to be run by python nosetests
-# catkin_add_nosetests(test/test1.py)
+catkin_add_nosetests(test/test1.py)
