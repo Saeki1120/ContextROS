@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/saeki/ContextROS/saeki_ws/devel/setup.sh

@@ -1,0 +1,39 @@
+<launch>
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+
+  <arg name="x_pos" default="-2.0"/>
+  <arg name="y_pos" default="-0.5"/>
+  <arg name="z_pos" default="0.0"/>
+
+  <arg name="obj_x_pos" default="-1.0"/>
+  <arg name="obj_y_pos" default="-0.5"/>
+  <arg name="obj_z_pos" default="0.0"/>
+
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_world.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+  <param name="object_description" command="$(find xacro)/xacro --inorder /media/sf_VirtualUbuntu1604/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo//urdf/simple_object.urdf.xacro" />
+
+  <!-- Convert an xacro and put on parameter server -->
+
+
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"  args="-urdf -model turtlebot3_$(arg model) -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+
+  <node name="spawn_urdf_object" pkg="gazebo_ros" type="spawn_model" args="-urdf -model trash1 -x $(arg obj_x_pos) -y $(arg obj_y_pos) -z $(arg obj_z_pos) -param object_description"/>
+
+  <!-- Spawn a robot into Gazebo -->
+  <!--
+  <node name="spawn_urdf2" pkg="gazebo_ros" type="spawn_model" args="-param robot_description2 -x 5 -y 5 -z 0.1 -urdf -model pr2" />
+  -->
+
+</launch>
