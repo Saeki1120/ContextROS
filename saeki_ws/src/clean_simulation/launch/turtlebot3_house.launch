@@ -1,8 +1,21 @@
 <launch>
-  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
-  <arg name="x_pos" default="-3.0"/>
-  <arg name="y_pos" default="1.0"/>
-  <arg name="z_pos" default="0.0"/>
+  <!-- ロボット1のパラメータ  -->
+  <arg name="model1" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="x1_pos" default="-3.0"/>
+  <arg name="y1_pos" default="1.0"/>
+  <arg name="z1_pos" default="0.0"/>
+
+  <!-- ロボット2のパラメータ  -->
+  <arg name="model2" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="x2_pos" default="-5.0"/>
+  <arg name="y2_pos" default="4.0"/>
+  <arg name="z2_pos" default="0.0"/>
+
+  <!-- ゴミの位置  -->
+  <arg name="obj_x_pos" default="-1.0"/>
+  <arg name="obj_y_pos" default="1.0"/>
+  <arg name="obj_z_pos" default="0.0"/>
+
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_house.world"/>
@@ -13,7 +26,19 @@
     <arg name="debug" value="false"/>
   </include>
 
-  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+  <!-- ロボットのモデル選択 -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model1).urdf.xacro" />
 
-  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3 -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+  <!-- ゴミのモデル選択  -->
+  <param name="trash_description" command="$(find xacro)/xacro --inorder /media/sf_VirtualUbuntu1604/catkin_ws/src/clean_simulation/urdf/trash_object.urdf.xacro" />
+
+  <!--　ロボット1の生成  -->
+  <node name="spawn_urdf1" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_$(arg model1)_1 -x $(arg x1_pos) -y $(arg y1_pos) -z $(arg z1_pos) -param robot_description" />
+
+  <!--　ロボット2の生成  -->
+  <!-- <node name="spawn_urdf2" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_$(arg model2)_2 -x $(arg x2_pos) -y $(arg y2_pos) -z $(arg z2_pos) -param robot_description" /> -->
+
+  <!-- ゴミの生成　 -->
+  <node name="spawn_urdf_trash" pkg="gazebo_ros" type="spawn_model" args="-urdf -model trash1 -x $(arg obj_x_pos) -y $(arg obj_y_pos) -z $(arg obj_z_pos) -param trash_description"/>
+
 </launch>

@@ -7,6 +7,8 @@
 import rospy
 from gazebo_msgs.msg import ModelStates
 from gazebo_msgs.srv import DeleteModel
+from std_srvs.srv import Trigger
+from std_srvs.srv import TriggerResponse
 
 class Model:
     """名前と位置をもつ"""
@@ -22,14 +24,23 @@ class Clean:
     """対象モデルの範囲内にあるオブジェクトを消去する"""
     def __init__(self, name):
         rospy.loginfo("TurtleBot3 Clean Node Init")
-        rospy.init_node('cleaner')
+        print("Waiting for gazebo services...")
+        rospy.wait_for_service('gazebo/delete_model')
+        print("Got it.")
+        
         self.sub = rospy.Subscriber('/gazebo/model_states', ModelStates, self.update_location)
         self.delete_trash = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
+        self.switch_cleaner = rospy.Service('switch_cleaner', Trigger, self.switch)
+
+        # 掃除したゴミの数をpubするといいかも？
+
         self.target = name
+        self.state = 'off'
         self.trashs = {}
         self.robots = {}
-        self.flag = 'First'
-        while self.flag == 'First':
+
+        self.flag = True
+        while self.flag:
             pass
 
     def update_location(self, model_states):
@@ -49,8 +60,8 @@ class Clean:
                 pass
 
         # 最初の受信を判定
-        if self.flag == 'First':
-            self.flag = 'Second'
+        if self.flag:
+            self.flag = False
 
     def collision(self, model):
         # 当たり判定を行う
@@ -61,29 +72,40 @@ class Clean:
 
     def clean(self):
         # 掃除する
-        for name, model in self.trashs.items():
-            if self.collision(model) == True:
-                self.delete_trash(name)
-                self.trashs.pop(name)
-                rospy.loginfo("%s deleted", name)
+        if 'on' == self.state:
+            for name, model in self.trashs.items():
+                if self.collision(model):
+                    self.delete_trash(name)
+                    self.trashs.pop(name)
+                    rospy.loginfo("%s deleted", name)
+        elif 'off' == self.state:
+            pass
+        else:
+            pass
 
-    def on(self, arg):
-        # 掃除を始める
-        pass
 
-    def off(self, arg):
-        # 掃除をやめる
-        pass
+    def switch(self, request):
+        # 掃除状態を変更する
+        if 'on' == self.state:
+            self.state = 'off'
+        elif 'off' == self.state:
+            self.state = 'on'
+
+        msg = "Now state " + self.state
+        rospy.loginfo(msg)
+
+        return TriggerResponse(success=True, message=self.state)
 
 
 if __name__ == '__main__':
     print('OK')
     # 掃除する機体名を入力
+    rospy.init_node('cleaner', anonymous=True)
     clean = Clean("turtlebot3_waffle")
     print('Start')
     # ゴミがロボットの周囲(半径10cm)に存在したら消す
     # 10Hz
-    rate = rospy.Rate(1)
+    rate = rospy.Rate(125)
     while not rospy.is_shutdown():
         clean.clean()
         rate.sleep()

@@ -11,7 +11,7 @@
 
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_world.world"/>
+    <arg name="world_name" value="$(find clean_simulation)/worlds/turtlebot3_world.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>
@@ -19,9 +19,10 @@
     <arg name="debug" value="false"/>
   </include>
 
-  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find clean_simulation)/urdf/turtlebot3_$(arg model).urdf.xacro" />
 
-  <param name="object_description" command="$(find xacro)/xacro --inorder /media/sf_VirtualUbuntu1604/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo//urdf/simple_object.urdf.xacro" />
+  
+  <param name="object_description" command="$(find xacro)/xacro --inorder $(find clean_simulation)/urdf/trash_object.urdf.xacro" />
 
   <!-- Convert an xacro and put on parameter server -->
 
@@ -30,6 +31,15 @@
   <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"  args="-urdf -model turtlebot3_$(arg model) -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
 
   <node name="spawn_urdf_object" pkg="gazebo_ros" type="spawn_model" args="-urdf -model trash1 -x $(arg obj_x_pos) -y $(arg obj_y_pos) -z $(arg obj_z_pos) -param object_description"/>
+
+  <!-- drive -->
+  <node name="clean_robo" pkg="clean_simulation" type="clean_robo.py" />
+
+  <!-- clean -->
+  <node name="cleaner" pkg="clean_simulation" type="clean.py" />
+
+  <!-- trash spawn -->
+  <node name="spawner" pkg="clean_simulation" type="spawn_trashes.py" />
 
   <!-- Spawn a robot into Gazebo -->
   <!--
