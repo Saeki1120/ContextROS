@@ -1,15 +1,6 @@
 <launch>
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
 
-  <arg name="x_pos" default="-2.0"/>
-  <arg name="y_pos" default="-0.5"/>
-  <arg name="z_pos" default="0.0"/>
-
-  <arg name="obj_x_pos" default="-1.0"/>
-  <arg name="obj_y_pos" default="-0.5"/>
-  <arg name="obj_z_pos" default="0.0"/>
-
-
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find clean_simulation)/worlds/turtlebot3_world.world"/>
     <arg name="paused" value="false"/>
@@ -19,27 +10,65 @@
     <arg name="debug" value="false"/>
   </include>
 
-  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find clean_simulation)/urdf/turtlebot3_$(arg model).urdf.xacro" />
 
-  
+
+
+  <arg name="obj_x_pos" default="-1.0"/>
+  <arg name="obj_y_pos" default="-0.5"/>
+  <arg name="obj_z_pos" default="0.0"/>
+
+  <group ns="robo1">
+    <arg name="x_pos" default="-2.4"/>
+    <arg name="y_pos" default="-0.5"/>
+    <arg name="z_pos" default="0.0"/>
+    <!-- <remap from="gazebo/delete_model" to="robo1/gazebo/delete_model" /> -->
+
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find clean_simulation)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_$(arg model)1 -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+
+    <!-- drive -->
+    <node name="clean_robo" pkg="clean_simulation" type="clean_robo.py" args="-name robo1"/>
+
+    <!-- clean -->
+    <node name="cleaner" pkg="clean_simulation" type="clean.py" args="turtlebot3_waffle1"/>
+
+  </group>
+
+
+  <group ns="robo2">
+    <arg name="x_pos2" default="-2.4"/>
+    <arg name="y_pos2" default="0.5"/>
+    <arg name="z_pos2" default="0.0"/>
+    <!-- <remap from="gazebo/delete_model" to="robo1/gazebo/delete_model" /> -->
+
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find clean_simulation)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_$(arg model)2 -x $(arg x_pos2) -y $(arg y_pos2) -z $(arg z_pos2) -param robot_description" />
+
+    <!-- drive -->
+    <node name="clean_robo" pkg="clean_simulation" type="clean_robo.py" args="-name robo1"/>
+
+    <!-- clean -->
+    <node name="cleaner" pkg="clean_simulation" type="clean.py" args="turtlebot3_waffle2"/>
+
+  </group>
+
+
+
+
   <param name="object_description" command="$(find xacro)/xacro --inorder $(find clean_simulation)/urdf/trash_object.urdf.xacro" />
-
-  <!-- Convert an xacro and put on parameter server -->
-
-
-
-  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"  args="-urdf -model turtlebot3_$(arg model) -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
 
   <node name="spawn_urdf_object" pkg="gazebo_ros" type="spawn_model" args="-urdf -model trash1 -x $(arg obj_x_pos) -y $(arg obj_y_pos) -z $(arg obj_z_pos) -param object_description"/>
 
-  <!-- drive -->
-  <node name="clean_robo" pkg="clean_simulation" type="clean_robo.py" />
-
-  <!-- clean -->
-  <node name="cleaner" pkg="clean_simulation" type="clean.py" />
 
   <!-- trash spawn -->
   <node name="spawner" pkg="clean_simulation" type="spawn_trashes.py" />
+
+
+
+
+
 
   <!-- Spawn a robot into Gazebo -->
   <!--

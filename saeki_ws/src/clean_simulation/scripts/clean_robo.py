@@ -23,6 +23,7 @@ from std_srvs.srv import Trigger
 
 class CleanRobo:
     def __init__(self, name=''):
+        name = rospy.get_namespace()
         self.name = name
         self.state = 'hoge'
 
@@ -34,20 +35,21 @@ class CleanRobo:
         # 複数のロボットのトピック名に関しては後で調べましょう
 
         # laser subscribe
-        self.laser_scan_sub  = rospy.Subscriber(name + "scan", LaserScan, self.laser_scan_msg_callback)
+        self.laser_scan_sub  = rospy.Subscriber("scan", LaserScan, self.laser_scan_msg_callback)
 
         # odom subscribe
-        self.odom_sub = rospy.Subscriber(name + "odom", Odometry, self.odom_msg_callback)
+        self.odom_sub = rospy.Subscriber("odom", Odometry, self.odom_msg_callback)
 
         # バンパー？
 
-        self.drive_manager = AutoDrive()
-        self.cleaner = Cleaner()
+        self.drive_manager = AutoDrive(name)
+        self.cleaner = Cleaner(name)
 
         # 常に掃除 on
         self.cleaner.on()
 
         # self.count = 0
+        rospy.loginfo('CleanRobo initialized')
 
     def control_loop(self):
         # self.count += 1
@@ -88,8 +90,8 @@ class AutoDrive:
         self.check_side_dist    = 0.6;
 
         # cmd pub
-        cmd_vel_topic = name + '/cmd_vel'
-        self.cmd_vel_pub = rospy.Publisher(cmd_vel_topic, Twist, queue_size=10)
+        cmd_vel_topic = name + 'cmd_vel'
+        self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     def auto_drive(self, scan_data, pose):
         if 'get_direction' == self.state:
@@ -142,13 +144,14 @@ class AutoDrive:
 
 
 class Cleaner:
-    def __init__(self):
+    def __init__(self, name=''):
         #cmd_vel_topic = name + '/cmd_vel'
         # clean service
         rospy.loginfo('waiting clean service')
         rospy.wait_for_service('switch_cleaner')
 
         self.switch = rospy.ServiceProxy('switch_cleaner', Trigger)
+        rospy.loginfo('Cleaner initialized')
 
     def on(self):
         # while self.switch().message == 'off':
@@ -158,7 +161,7 @@ class Cleaner:
             try:
                 res = self.switch().message
             except rospy.ServiceException, e:
-                print('Service call failed: %s'% e)
+                rospy.logerr('Service call failed: %s', e)
 
 
     def off(self):
@@ -169,7 +172,7 @@ class Cleaner:
             try:
                 res = self.switch().message
             except rospy.ServiceException, e:
-                print('Service call failed: %s'% e)
+                rospy.logerr('Service call failed: %s', e)
 
 
 

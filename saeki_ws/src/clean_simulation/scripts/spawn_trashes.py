@@ -17,16 +17,16 @@ class TrashSpawner:
     """ゴミ生成器"""
     # 正直これもサーバーにして常に生成できるようにしたい
     def __init__(self):
-        print("Waiting for gazebo services...")
+        rospy.loginfo("Waiting for gazebo services...")
         #rospy.init_node('trash_spaener')
         rospy.wait_for_service('gazebo/delete_model')
         rospy.wait_for_service('gazebo/spawn_urdf_model')
-        print("Got it.")
+        #rospy.loginfo("Got it.")
 
         self.spawn_trash = rospy.ServiceProxy('gazebo/spawn_urdf_model', SpawnModel)
         self.delete_trash = rospy.ServiceProxy("gazebo/delete_model", DeleteModel)
         self.spawn_srv = rospy.Service('spawn_trash', SpawnTrash, self.switch)
-
+        self.trash_num = 0
 
         # パスを考えないとなぁ
         with open("/media/sf_VirtualUbuntu1604/catkin_ws/src/clean_simulation/urdf/trash_object.urdf.xacro", "r") as f:
@@ -39,7 +39,13 @@ class TrashSpawner:
         # self.romm_size = {0:[(7, -1), (5, -5)], 1: [(7, 5), (2.5, 0)], 2:[(2, 5), (0.1, 1.1)], 3:[(-0.2, 5), (-5, 0)], 4:[(-5.2, 5), (-7.3, 1)], 5:[(-5.2, 0), (-7.3, -3.7)]}
         # self.trash_num = 0
 
-        self.spawn_trashes(0,0)
+        #self.spawn_trashes(0.5,0.5)
+        self.spawn_trashes(0.5,-0.5)
+        #self.spawn_trashes(-0.5,0.5)
+        self.spawn_trashes(-0.5,-0.5)
+        # self.spawn_trashes(0,0)
+
+        rospy.loginfo('TrashSpawner initialized')
 
     # def spawn_trashe(self, arg):
     #     pass
@@ -47,18 +53,19 @@ class TrashSpawner:
     def spawn_trashes(self, x, y):
         # 同名のオブジェクトが生成されるとしんどいなぁ
         # とりあえず生成予定の名前のオブジェクトを削除する
-        for num in xrange(0,10):
-            trash_name = "trash_{0}_0".format(num)
-            print("Deleting model:%s", trash_name)
-            self.delete_trash(trash_name)
+        # for num in xrange(0,10):
+        #     trash_name = "trash_{0}_0".format(num)
+        #     rospy.loginfo("Deleting model:%s", trash_name)
+        #     self.delete_trash(trash_name)
 
         for num in xrange(0,10):
             trash_y   = x + random.uniform(-0.5, 0.5)
             trash_x   = y + random.uniform(-0.5, 0.5)
-            trash_name   =   "trash_{0}_0".format(num)
-            print("Spawning model:%s", trash_name)
+            trash_name   =   "trash_{0}_0".format(self.trash_num)
+            rospy.loginfo("Spawning model:%s", trash_name)
             trash_pose   =   Pose(Point(x=trash_x, y=trash_y, z=0),   self.orient)
             self.spawn_trash(trash_name, self.product_xml, "", trash_pose, "world")
+            self.trash_num += 1
 
     def switch(self, request):
         # ゴミを生成する
